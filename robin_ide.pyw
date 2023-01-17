@@ -2,12 +2,11 @@ import threading
 import tkinter.messagebox
 import tkinter as tk
 import traceback
-from tkinter import ttk, filedialog, font, simpledialog, messagebox
+from tkinter import ttk, filedialog, simpledialog, messagebox
 import ttkthemes
 import make_exe
-import os, sys, shutil
-import imp_lexer
-import parse, imp_lexer, ro_asm_compiler, subprocess
+import os, sys
+import parse, imp_lexer, ro_asm_compiler
 import re
 
 code_lighting_theme_dark = {"RESERVED": {"foreground": "#ff0000"},
@@ -31,6 +30,7 @@ code_lighting_theme_light = {"RESERVED": {"foreground": "#aa0000"},
                              "KEYWORD2": {"foreground": '#8888aa'}
                              }
 
+
 def exc_log(func=None):
     def res(*args, **kwargs):
         try:
@@ -46,7 +46,9 @@ def exc_log(func=None):
             main exception
             """).pack()
             w.mainloop()
+
     return res
+
 
 class CodeStyleObj:
     @exc_log
