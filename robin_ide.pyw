@@ -404,6 +404,7 @@ class App:
         with open(filename.split('.')[-2].split('\\')[-1] + '.masm', 'w+') as f:
             f.write(robin_assembler)
         os.chdir(robin_directory)
+        print(robin_directory)
         make_exe.main(filename.split('.')[-2].split('\\')[-1] + '.masm')
 
     @exc_log

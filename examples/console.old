@@ -1,0 +1,24 @@
+.NOLIST
+.NOLISTMACRO
+
+.486
+.model flat,stdcall
+option casemap:none
+;option casemap:all
+;option casemap:notpublic
+
+.stack 4096
+
+;   include \masm 6.14\include\user32.inc
+;   include \masm 6.14\include\kernel32.inc
+;   include \masm 6.14\include\windows.inc
+;   include \masm 6.14\include\msvcrt.inc
+;   include \masm 6.14\include\masm32.inc
+;   include \masm 6.14\include\macros.inc
+   include \masm 6.14\include\io.inc
+
+;   includelib "\masm 6.14\lib\masm32.lib"
+   includelib "\masm 6.14\lib\user32.lib"
+   includelib "\masm 6.14\lib\kernel32.lib"
+   includelib "\masm 6.14\lib\msvcrt.lib"
+   includelib "\masm 6.14\lib\io_proc.lib"

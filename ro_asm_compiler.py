@@ -8,7 +8,7 @@ class GetAddress:
         self.c_n = {}
         self.all_addresses = []
         self.a_c = {}
-        self.includes = ['console.inc']
+        self.includes = ['include/console.inc']
 
     @property
     def bool_address(self):
