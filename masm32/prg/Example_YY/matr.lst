@@ -1,0 +1,94 @@
+Microsoft (R) Macro Assembler Version 6.14.8444		    02/02/17 11:12:35
+matr.asm						     Page 1 - 1
+
+
+				include console.inc
+			      C .NOLIST
+			      C .LIST
+			      C 
+			      C 
+			      C 
+			      C    includelib "\masm 6.14\lib\masm32.lib"
+			      C    includelib "\masm 6.14\lib\user32.lib"
+			      C    includelib "\masm 6.14\lib\kernel32.lib"
+			      C    includelib "\masm 6.14\lib\msvcrt.lib"
+			      C    includelib "\masm 6.14\lib\io_proc.lib"
+			      C 
+
+				COMMENT *
+
+				   Работа с матрицей.
+				Матрица задается константами - размеры и числа в переменной matr
+				Можно менять числовые значения констант и тип переменной - программа будет работать правильно.
+
+				*
+ 00000000			.const
+ = 00000005			 d equ 5  ;  количество столбцов матрицы 
+ = 00000003			 h equ 3  ;  количество строк 
+ 00000019			.data
+ 00000019 00000001		matr dd 1, 2, 3, 4, 5
+	   00000002
+	   00000003
+	   00000004
+	   00000005
+ 0000002D  00000000		     dd 0, 0, 9, 8, 7
+	   00000000
+	   00000009
+	   00000008
+	   00000007
+ 00000041  00000006		     dd 6,-5,-4,-3,-2 ; можно задать все элементы в одной строке
+	   FFFFFFFB
+	   FFFFFFFC
+	   FFFFFFFD
+	   FFFFFFFE
+ 00000000			.code
+ 00000000			Start:
+				   ClrScr
+				   ConsoleTitle "Матрица"
+
+				; Работа со всеми элементами матрицы. Матрица как линейный массив, использование одного индекса
+ 00000038  33 C0		     xor eax,eax   ;  здесь будет сумма
+ 0000003A  33 DB		     xor ebx, ebx  ; обнуляется индексный регистр, чтобы начать работу с первым элементом 
+ 0000003C  B9 0000000F		     mov ecx, d*h ; количество элементов в матрице
+ 00000041  03 04 9D		  sum:   add eax, matr[ebx*type matr]
+	   00000019 R
+ 00000048  43			         inc ebx
+ 00000049  E2 F6		         loop sum
+				     outintln  eax   ,,'сумма элементов матрицы '
+
+
+				; Работа со всеми элементами матрицы, использование двух индексов   
+				    outstrln 'печать матрицы'
+ 00000160  33 ED		    xor ebp, ebp ; для движения вниз  ( индекс строки)
+ 00000162  33 DB		 r0 :   xor ebx, ebx ; для движения по строке вправо (индекс столбца)
+ 00000164			   r1:  outint matr[ebp][ebx],9
+ 00000180  83 C3 04		         add ebx, type matr; индекс столбца увеличивается на размер элемента 
+ 00000183  83 FB 14		         cmp ebx, d*type matr 
+ 00000186  75 DC		          jne r1
+				       newline 
+ 000001D4  83 C5 14		       add ebp, d*type matr ; индекс строки увеличивается на размер строки
+ 000001D7  83 FD 3C		       cmp ebp, d*h*type matr
+ 000001DA  75 86		       jne r0
+
+				; Вычисление адреса элемента по его позиции
+				     inint  eax, 'номер строки '
+ 0000021A  66| 48		     dec ax
+ 0000021C  BA 00000014		     mov edx, d*type matr
+ 00000221  F7 E2		     mul edx
+				     inint ebx,'номер столбца '
+ 0000025F  4B			     dec ebx
+				     outintln  matr[eax][ebx*type matr] , , 'на этом месте стоит '
+
+
+				; Работа с элементами столбца. Загрузка адреса в регистр   
+				     inint ebx, 'введите номер столбца, который надо напечатать  '
+ 00000337  8D 1C 9D		     lea ebx, matr[ebx* type matr -type matr]; загрузка первого элемента заданного столбца
+	   00000015 R
+ 0000033E  B9 00000003		     mov ecx, h
+ 00000343  33 D2		     xor edx,edx
+ 00000345			     sta: outint <dword ptr [ebx] [edx*type matr]>,8
+ 0000035D  83 C2 05		          add edx,d ; перехд к элементу следующей строки
+ 00000360  E2 E3		          loop sta  
+				       newline 
+				   exit
+				   end Start

@@ -1,0 +1,16 @@
+include console.inc
+.data
+user_var_10 dq ?
+user_var_20 dq ?
+.code
+Start:
+mov DWORD PTR user_var_10, 0
+mov EAX, DWORD PTR user_var_10; переносим значение первого выражения в регистр
+mov EBX, 2 ; переносим значение второго выражения в регистр
+add EAX, EBX ; складываем
+mov EAX, EAX ; переносим из регистра в ячейку памяти - результат
+mov DWORD PTR user_var_20, EAX
+outint DWORD PTR user_var_20
+newline
+exit
+end Start

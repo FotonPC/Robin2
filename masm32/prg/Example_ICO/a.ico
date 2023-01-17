@@ -1,0 +1,43 @@
+.586
+.model flat,stdcall
+
+COMMENT *
+   Файл с иконками в формате png
+*
+
+.code
+  dw 0 ; reserved, must be 0
+  dw 1 ; icon type, must be 1
+  dw 2 ; number of images in file
+
+; 1st icon header
+  db 32 ; width
+  db 32 ; height
+  db 0 ; no color palette
+  db 0 ; reserved, must be 0
+  dw 1 ; planes
+  dw 32 ; bits per pixel
+  dd icon32_end-icon32_start ; length
+  dd icon32_start ; offset
+
+; 2nd icon header
+  db 16 ; width
+  db 16 ; height
+  db 0 ; no color palette
+  db 0 ; reserved, must be 0
+  dw 1 ; planes
+  dw 32 ; bits per pixel
+  dd icon16_end-icon16_start ; length
+  dd icon16_start ; offset
+
+; 1st icon body
+icon32_start:
+  include 'icon32.png'
+icon32_end:
+
+; 2nd icon body
+icon16_start:
+   include 'icon16.png'
+icon16_end:
+
+   end

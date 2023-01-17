@@ -1,0 +1,1 @@
+@cmd /k "path %path%;c:\masm32\bin&set include=c:\masm32\include&set lib=c:\masm32\lib"

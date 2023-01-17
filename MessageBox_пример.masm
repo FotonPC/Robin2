@@ -1,0 +1,12 @@
+include console.inc
+.data
+stroka db "Графика на Робине",0
+.code
+Start:
+and al, al; Это включение в код, filename - test1.asm
+invoke MessageBox,0,offset stroka,offset stroka,0
+and al, al; Это включение в код, filename - test3.asm
+outstr 'Graphic on Robin'
+newline
+exit
+end Start

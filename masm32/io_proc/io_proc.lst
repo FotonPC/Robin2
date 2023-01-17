@@ -1,0 +1,141 @@
+Microsoft (R) Macro Assembler Version 6.14.8444		    01/29/20 22:38:07
+io_proc.asm						     Page 1 - 1
+
+
+				include console.inc
+			      C .NOLIST
+			      C .LIST
+			      C ; ╚ёъы■ўхэшх шч ёяшёър ёыєцхсэ√ї ёыют
+			      C option NoKeyWord: <c name str>
+			      C 
+			      C 
+			      C 
+			      C 
+			      C ;include masm32.inc
+			      C 
+			      C    includelib masm32.lib
+			      C    includelib user32.lib
+			      C    includelib kernel32.lib
+			      C    includelib msvcrt.lib
+			      C    includelib io_proc.lib
+			      C    
+			      C 
+
+ 00000019			.data
+ 00000019 00 00 00		buf db 0,0,0
+ 0000001C 0000000A		_10 dd 10
+
+ 00000032			.code
+ 00000032			inint_proc proc
+				; Схема Горнера
+ 00000032  53			     push  ebx
+ 00000033  51			     push  ecx
+ 00000034  52			     push  edx
+ 00000035  C6 05 0000001A R	     mov   buf+1,0;   ещё не было символов числа
+	   00
+ 0000003C  C6 05 0000001B R	     mov   buf+2,0;   хороший конец лексемы (spaces,CR,LF)
+	   00
+ 00000043  33 DB		     xor   ebx,ebx;   здесь формируем x
+ 00000045			@MM: invoke StdIn,offset buf,1; один символ
+ 00000051  80 3D 00000019 R	     cmp   buf,' '
+	   20
+ 00000058  75 0E		     jne   @M1
+ 0000005A  80 3D 0000001A R	     cmp   buf+1,0
+	   00
+ 00000061  74 E2		     je    @MM;       ещё не было символов числа
+ 00000063  E9 000000C5		     jmp   KOH;       пробел - конец лексемы
+ 00000068  80 3D 00000019 R	@M1: cmp   buf,13;    CR
+	   0D
+ 0000006F  75 0E		     jne   @M11
+ 00000071  80 3D 0000001A R	     cmp   buf+1,0
+	   00
+ 00000078  74 CB		     je    @MM;       CR, но ещё не было символов числа
+ 0000007A  E9 000000AE		     jmp   KOH;       CR - конец числа
+ 0000007F  80 3D 00000019 R	@M11:cmp   buf,10;    LF
+	   0A
+ 00000086  75 0E		     jne   @M2
+ 00000088  80 3D 0000001A R	     cmp   buf+1,0
+	   00
+ 0000008F  74 B4		     je    @MM;       LF, но ещё не было символов числа
+ 00000091  E9 00000097		     jmp   KOH;       LF - конец строки и числа (так не бывает!)
+ 00000096  80 3D 00000019 R	@M2: cmp   buf,'-'
+	   2D
+ 0000009D  75 12		     jne   @M3
+ 0000009F  80 3D 0000001A R	     cmp   buf+1,0
+	   00
+ 000000A6  75 7E		     jne   KOH1;      минус внутри числа - плохой конец лексемы
+ 000000A8  C6 05 0000001A R	     mov   buf+1,'-'; минус перед числом
+	   2D
+ 000000AF  EB 94		     jmp   @MM
+ 000000B1  80 3D 00000019 R	@M3: cmp   buf,'+' 
+	   2B
+ 000000B8  75 15		     jne   @M4
+ 000000BA  80 3D 0000001A R	     cmp   buf+1,0
+	   00
+ 000000C1  75 63		     jne   KOH1;      плюс внутри числа - плохой конец лексемы
+ 000000C3  C6 05 0000001A R	     mov   buf+1,'+'; плюс перед числом
+	   2B
+ 000000CA  E9 FFFFFF76		     jmp   @MM
+ 000000CF  80 3D 00000019 R	@M4: cmp   buf,'0'
+	   30
+ 000000D6  72 4E		     jb    KOH1;      не цифра - плохой конец лексемы
+ 000000D8  80 3D 00000019 R	     cmp   buf,'9'
+	   39
+ 000000DF  77 45		     ja    KOH1;      не цифра - плохой конец лексемы
+ 000000E1  80 3D 0000001A R	     cmp   buf+1,0
+	   00
+ 000000E8  75 07		     jne   @M5
+ 000000EA  C6 05 0000001A R	     mov   buf+1,'+'; первая цифра числа, минуса не было
+	   2B
+				;    цифра
+ 000000F1  8B C3		@M5: mov   eax,ebx
+ 000000F3  F7 25 0000001C R	     mul   _10
+ 000000F9  72 5E		     jc    Error
+ 000000FB  8B D8		     mov   ebx,eax;   x:=10*x 
+ 000000FD  0F B6 05		     movzx eax,buf
+	   00000019 R
+ 00000104  83 E8 30		     sub   eax,'0'
+ 00000107  03 D8		     add   ebx,eax;   x:=x*10+digit
+ 00000109  72 4E		     jc    Error
+ 0000010B  80 3D 0000001A R	     cmp   buf+1,'-'; был минус перед числом
+	   2D
+ 00000112  0F 85 FFFFFF2D	     jne   @MM;        не было минуса перед числом
+ 00000118  81 FB 80000000	     cmp   ebx,80000000h;  
+ 0000011E  0F 86 FFFFFF21	     jbe   @MM
+				;    плохое число со знаком минус
+ 00000124  EB 33		     jmp   Error
+ 00000126  C6 05 0000001B R	KOH1:mov   buf+2,1;   плохой конец лексемы числа     
+	   01
+ 0000012D  8B C3		KOH: mov   eax,ebx
+ 0000012F  80 3D 0000001A R	     cmp   buf+1,'-'
+	   2D
+ 00000136  75 02		     jne   @M6
+ 00000138  F7 D8		     neg   eax
+ 0000013A  80 3D 0000001A R	@M6: cmp   buf+1,'-'; ZF:=1 => есть "-", иначе ZF:=0
+	   2D
+ 00000141  F8			     clc            ; CF:=0 - число в диапазоне dword
+ 00000142  9C			     pushfd
+ 00000143  80 24 24 7F		     and   byte ptr [esp],7Fh; SF:=0
+ 00000147  80 3D 0000001B R	     cmp   buf+2,0;   хорошая лексема ?  
+	   00
+ 0000014E  74 04		     je    @M7
+ 00000150  80 0C 24 80		     or    byte ptr [esp],80h; SF:=1
+ 00000154  9D			@M7: popfd;         есть флаги CF=0, ZF и SF
+ 00000155  5A			@M8: pop   edx
+ 00000156  59			     pop   ecx
+ 00000157  5B			     pop   ebx
+ 00000158  C3			     ret
+ 00000159			Error:
+				     SetTextAttr Yellow
+				     outstrln "** inint: Number too big:=MaxLongint, CF:=1 **"
+				     SetTextAttr
+ 0000022D  B8 7FFFFFFF		     mov   eax,7FFFFFFFh; MaxLongint
+ 00000232  50			     push  eax
+				     flush
+ 00000250  58			     pop   eax
+ 00000251  F9			     stc;           CF:=1 - ошибка, ZF и SF не определены
+ 00000252  E9 FFFFFEFE		     jmp  @M8
+ 00000257			inint_proc endp
+				;---------------------------------
+
+				     end

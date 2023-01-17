@@ -1,0 +1,50 @@
+include console.inc
+.data
+user_var_10 dq ?
+user_var_30 dq ?
+user_var_40 dq ?
+user_var_20 dq ?
+.code
+Start:
+mov DWORD PTR user_var_40, 1
+mov DWORD PTR user_var_30, 1
+outint DWORD PTR user_var_40
+newline
+outint DWORD PTR user_var_30
+newline
+mov DWORD PTR user_var_20, 0
+while_labelbool_var_42:
+mov EAX, DWORD PTR user_var_20
+mov EBX, 10
+cmp EAX, EBX
+jnl next_bool_var_22
+mov ECX, 1
+jmp next_bool_var_32
+next_bool_var_22:
+mov ECX, 0
+next_bool_var_32:
+mov EAX, ECX
+cmp EAX, 1
+jne while_nextbool_var_42
+mov EAX, DWORD PTR user_var_40; переносим значение первого выражения в регистр
+mov EBX, DWORD PTR user_var_30 ; переносим значение второго выражения в регистр
+add EAX, EBX ; складываем
+mov EAX, EAX ; переносим из регистра в ячейку памяти - результат
+mov DWORD PTR user_var_10, EAX
+outint DWORD PTR user_var_10
+newline
+mov EDX, DWORD PTR user_var_30 ;Извлекаем в регистр для меньшего количества багов
+mov EAX, EDX ;Дада, запихиваем зачем-то снова
+mov DWORD PTR user_var_40, EAX
+mov EDX, DWORD PTR user_var_10 ;Извлекаем в регистр для меньшего количества багов
+mov EAX, EDX ;Дада, запихиваем зачем-то снова
+mov DWORD PTR user_var_30, EAX
+mov EAX, DWORD PTR user_var_20; переносим значение первого выражения в регистр
+mov EBX, 1 ; переносим значение второго выражения в регистр
+add EAX, EBX ; складываем
+mov EAX, EAX ; переносим из регистра в ячейку памяти - результат
+mov DWORD PTR user_var_20, EAX
+jmp while_labelbool_var_42
+while_nextbool_var_42:
+exit
+end Start

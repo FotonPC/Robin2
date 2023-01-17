@@ -1,0 +1,1722 @@
+Microsoft (R) Macro Assembler Version 6.14.8444		    02/19/18 17:04:39
+a.asm							     Page 1 - 1
+
+
+				include console.inc
+			      C .NOLIST
+			      C .LIST
+			      C 
+			      C 
+			      C ;include masm32.inc
+			      C 
+			      C    includelib masm32.lib
+			      C    includelib user32.lib
+			      C    includelib kernel32.lib
+			      C    includelib msvcrt.lib
+			      C    includelib io_proc.lib
+			      C    
+			      C 
+
+				COMMENT *
+				   Отладочный модуль
+				*
+
+				SelfModify macro
+				      echo Old Macros Modify
+				  SelfModify macro p:=<y>
+				      echo New Macros Modify
+				    SelfModify macro
+				      echo Once More Macros Modify
+				    endm
+				  endm
+				endm
+
+				Maxn macro x:vararg
+				     mov eax,80000000h
+				for i,<x>
+				     local L
+				     cmp eax,i
+				     jge L
+				     mov eax,i
+				L:
+				endm
+				     exitm <eax>
+				     endm
+
+ 00000019			.data
+
+ 00000000			.code
+ 00000000			Start:
+				   ConsoleTitle "   Самомодифицирующийся MACRO"
+				echo
+				   SelfModify
+				   SelfModify
+				   SelfModify
+				   SelfModify
+				echo
+				Pause "Нажмите клавишу..."
+				   ClrScr
+				   ConsoleTitle "   MACRO-функция с переменным числом параметров"
+ = 00000000			   k=0
+ 0000015B  B8 00000000		   mov eax,0
+				   outintln Maxn(1,2,4)
+				.Listall
+				   while k LT 3
+				      local L
+				      k=k+1
+				L: outintln k
+				   endm
+			     1	      local L
+ = 00000001		     1	      k=k+1
+ 0000024C		     1	??003C: outintln k
+			     2	    outint k,,
+			     3	    OutNum k,,d,
+			     4	    local len,fmt,L1,L2,L3,L4,M1,M2,M3,tp
+			     4	ifnb <>
+			     4	    outstr 
+			     4	endif
+			     4	    ??SaveReg
+ 0000024C  50		     5	    push eax
+ 0000024D  51		     5	    push ecx
+ 0000024E  52		     5	    push edx
+ = 00000000		     4	    ??003D=0
+			     4	
+			     4	Comment #
+			     4	for i,<al,ah,bl,bh,cl,ch,dl,dh>
+			     4	  ifidni <i>,<x>
+			     4	    len=1
+			     4	    exitm
+			     4	  endif
+			     4	endm
+			     4	#
+			     4	
+			     4	if @SizeStr(k) GT 3
+			     4	  ifidni @SubStr(k,1,4),<type>
+			     4	     ??003D=1111
+			     4	  endif
+			     4	endif
+			     4	;-----------  byte<>sbyte !!!
+ = 00000000		     4	??0046= type (k)
+			     4	if ??003D EQ 1111; Был outnum type ...;
+			     4	     mov  eax,(k)
+			     4	;elseif type (&x) EQ byte or type (&x) EQ sbyte or type (&x) EQ 2 or len EQ 1
+			     4	elseif ??0046 EQ 1 or ??0046 EQ 2			; or ??003D EQ 1
+			     4	;  Знаковое и беззнаковое расширение до 4 байт
+			     4	   ifidni <d>,<d>
+			     4	      movsx eax,(k)
+			     4	   else
+			     4	      movzx eax,(k)
+			     4	   endif
+			     4	elseif ??0046 NE 8;   ==> type k EQ 0
+ 0000024F  B8 00000001	     4	       mov eax,k
+			     4	endif
+			     4	
+			     4	ifidni <k>,<esp>
+			     4	     add eax,12; коррекция 3*push
+			     4	endif
+			     4	
+			     4	ifidni <d>,<b>
+			     4	     xor  ebx,ebx; нет единиц
+			     4	if ??0046 EQ 8
+			     4	     mov  ecx,32
+			     4	     mov  eax,dword ptr k
+			     4	     mov  edx,dword ptr k+4
+			     4	??0043:  shl  edx,1
+			     4	     jc   ??0044
+			     4	     cmp  ebx,0
+			     4	     je   ??0045;      пропуск нулей
+			     4	     outchar '0'
+			     4	     jmp  ??0045
+			     4	??0044:  outchar '1'
+			     4	     inc  ebx;     была единица
+			     4	??0045:  dec  ecx
+			     4	     jne  ??0043
+			     4	endif
+			     4	     mov  ecx,32
+			     4	??003F:  shl  eax,1
+			     4	     jc   ??0040
+			     4	     cmp  ebx,0
+			     4	     je   ??0041;      пропуск нулей
+			     4	     outchar '0'
+			     4	     jmp  ??0041
+			     4	??0040:  outchar '1'
+			     4	     inc  ebx;     была единица
+			     4	??0041:  dec  ecx
+			     4	     jne  ??003F
+			     4	     test ebx,ebx
+			     4	     jne  ??0042
+			     4	     outchar '0'
+			     4	??0042:  outchar 'b'
+			     4	     ??RestoreReg
+			     4	     exitm
+			     4	endif 
+			     4	if ??0046 EQ 8
+			     4	.data
+			     4	??003E db "%I64d",0
+			     4	.code
+			     4	     invoke crt_printf,offset ??003E,k
+			     4	else
+ 000003AC		     4	.data
+ 000003AC 25 64 00	     4	??003E db "%d",0
+ 00000254		     4	.code
+ 00000254  50		   *	    push   eax
+ 00000255  68 000003AC R   *	    push   dword  ptr OFFSET FLAT:??003E
+ 0000025A  FF 15 00000000 E *	    call   _imp__printf
+ 00000260  83 C4 08	   *	    add    esp, 000000008h
+			     4	     invoke crt_printf,offset ??003E,eax
+			     4	endif
+			     4	
+			     4	ifidni <d>,<X>
+			     4	     outchar "h"
+			     4	endif
+			     4	     ??RestoreReg
+ 00000263  5A		     5	    pop  edx
+ 00000264  59		     5	    pop  ecx
+ 00000265  58		     5	    pop  eax
+			     2	    newline
+			     3	repeat 1
+			     3	   outchar 13    
+			     3	   outchar 10
+			     3	endm
+			     4	   outchar 13    
+			     5	    local len,buf,L
+			     5	ifnb <>
+			     5	     outstr 
+			     5	endif
+ = 00000000		     5	    ??0047=0
+			     5	for i,<al,ah,bl,bh,cl,ch,dl,dh>
+			     5	ifidni <i>,<13>
+			     5	    ??0047=1
+			     5	    exitm
+			     5	endif
+			     5	endm
+			     6	ifidni <al>,<13>
+			     6	    ??0047=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <ah>,<13>
+			     6	    ??0047=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <bl>,<13>
+			     6	    ??0047=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <bh>,<13>
+			     6	    ??0047=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <cl>,<13>
+			     6	    ??0047=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <ch>,<13>
+			     6	    ??0047=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <dl>,<13>
+			     6	    ??0047=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <dh>,<13>
+			     6	    ??0047=1
+			     6	    exitm
+			     6	endif
+			     5	if ??0047 NE 1 and type (13) EQ 0; это операнд i8
+			     5	  if (13) GT 255 OR (13) LT 0
+			     5	    echo -----------------------------------------------
+			     5	    echo ***** Macros outchar: Big operand **** 13 ****
+			     5	    echo -----------------------------------------------
+			     5	    .err
+			     5	    exitm
+			     5	  endif  
+			     5	endif
+			     5	if ??0047 NE 1 and type (13) NE 1 and type (13) NE 0
+			     5	    echo -----------------------------------------------
+			     5	    echo ***** Macros outchar: Bad operand **** 13 ****
+			     5	    echo -----------------------------------------------
+			     5	    .err
+			     5	    exitm
+			     5	endif
+ 000003AF		     5	.data
+ 000003AF 00 00		     5	??0048  db 0,0
+ 00000266		     5	.code
+ 00000266  50		     5	    push eax
+ 00000267  B0 0D	     5	    mov  al,13
+ 00000269  A2 000003AF R     5	    mov  ??0048,al
+ 0000026E  58		     5	    pop  eax
+			     5	    outstr offset ??0048
+			     6	    ??SaveReg
+ 0000026F  50		     7	    push eax
+ 00000270  51		     7	    push ecx
+ 00000271  52		     7	    push edx
+			     6	    ??CheckStrToBuf offset ??0048
+			     7	    Local buf,c,n,L1,L2
+ = o			     7	??004B   SubStr <offset ??0048>,1,1
+			     7	ifidn ??004B,<'>
+			     7	;c   SubStr <">,1,1
+			     7	??004B   textequ <">
+			     7	endif
+ 000003B1		     7	.data
+ 000003B1 00		     7	??004C  db 0
+			     7	ifidn ??004B,<">
+			     7	??004A db offset ??0048,0
+			     7	else
+ 000003B2  000000C8 [	     7	??004A db 200 dup (0)
+	    00
+	   ]
+ 00000272		     7	.code
+ 00000272  C6 05 000003B1 R  7	    mov  ??004C,0; надо перекодировать
+	   00
+ 00000279  B8 000003AF R     7	    mov  eax,offset ??0048
+ 0000027E  33 C9	     7	    xor  ecx,ecx
+ 00000280  8A 10	     7	??004D: mov  dl,[eax]
+ 00000282  88 91 000003B2 R  7	    mov  ??004A[ecx],dl
+ 00000288  40		     7	    inc  eax
+ 00000289  41		     7	    inc  ecx
+ 0000028A  80 FA 00	     7	    cmp  dl,0
+ 0000028D  75 F1	     7	    jne  ??004D
+			     7	endif
+ 0000028F		     7	.code
+ 0000028F  B8 000003B2 R     7	    mov  eax,offset ??004A
+ 00000294  80 3D 00000008 R  7	    cmp  ??ConsoleMode,0
+	   00
+ 0000029B  75 19	     7	    jne  ??004E;   перекодирование выключено
+ 0000029D  80 3D 000003B1 R  7	    cmp  ??004C,0
+	   00
+ 000002A4  75 10	     7	    jne  ??004E
+ 000002A6  50		     7	    push eax
+ 000002A7  50		   *	    push   eax
+ 000002A8  50		   *	    push   eax
+ 000002A9  E8 00000000 E   *	    call   CharToOemA
+			     7	    invoke CharToOem,eax,eax; Windows to DOS
+ 000002AE  C6 05 000003B1 R  7	    mov  ??004C,1; Не надо перекодировать второй раз!
+	   01
+ 000002B5  58		     7	    pop  eax
+ 000002B6		     7	??004E:
+ 000002B6  50		   *	    push   eax
+ 000002B7  E8 00000000 E   *	    call   StdOut
+			     6	    invoke StdOut,eax
+			     6	    ??RestoreReg
+ 000002BC  5A		     7	    pop  edx
+ 000002BD  59		     7	    pop  ecx
+ 000002BE  58		     7	    pop  eax
+			     4	   outchar 10
+			     5	    local len,buf,L
+			     5	ifnb <>
+			     5	     outstr 
+			     5	endif
+ = 00000000		     5	    ??004F=0
+			     5	for i,<al,ah,bl,bh,cl,ch,dl,dh>
+			     5	ifidni <i>,<10>
+			     5	    ??004F=1
+			     5	    exitm
+			     5	endif
+			     5	endm
+			     6	ifidni <al>,<10>
+			     6	    ??004F=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <ah>,<10>
+			     6	    ??004F=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <bl>,<10>
+			     6	    ??004F=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <bh>,<10>
+			     6	    ??004F=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <cl>,<10>
+			     6	    ??004F=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <ch>,<10>
+			     6	    ??004F=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <dl>,<10>
+			     6	    ??004F=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <dh>,<10>
+			     6	    ??004F=1
+			     6	    exitm
+			     6	endif
+			     5	if ??004F NE 1 and type (10) EQ 0; это операнд i8
+			     5	  if (10) GT 255 OR (10) LT 0
+			     5	    echo -----------------------------------------------
+			     5	    echo ***** Macros outchar: Big operand **** 10 ****
+			     5	    echo -----------------------------------------------
+			     5	    .err
+			     5	    exitm
+			     5	  endif  
+			     5	endif
+			     5	if ??004F NE 1 and type (10) NE 1 and type (10) NE 0
+			     5	    echo -----------------------------------------------
+			     5	    echo ***** Macros outchar: Bad operand **** 10 ****
+			     5	    echo -----------------------------------------------
+			     5	    .err
+			     5	    exitm
+			     5	endif
+ 0000047A		     5	.data
+ 0000047A 00 00		     5	??0050  db 0,0
+ 000002BF		     5	.code
+ 000002BF  50		     5	    push eax
+ 000002C0  B0 0A	     5	    mov  al,10
+ 000002C2  A2 0000047A R     5	    mov  ??0050,al
+ 000002C7  58		     5	    pop  eax
+			     5	    outstr offset ??0050
+			     6	    ??SaveReg
+ 000002C8  50		     7	    push eax
+ 000002C9  51		     7	    push ecx
+ 000002CA  52		     7	    push edx
+			     6	    ??CheckStrToBuf offset ??0050
+			     7	    Local buf,c,n,L1,L2
+ = o			     7	??0053   SubStr <offset ??0050>,1,1
+			     7	ifidn ??0053,<'>
+			     7	;c   SubStr <">,1,1
+			     7	??0053   textequ <">
+			     7	endif
+ 0000047C		     7	.data
+ 0000047C 00		     7	??0054  db 0
+			     7	ifidn ??0053,<">
+			     7	??0052 db offset ??0050,0
+			     7	else
+ 0000047D  000000C8 [	     7	??0052 db 200 dup (0)
+	    00
+	   ]
+ 000002CB		     7	.code
+ 000002CB  C6 05 0000047C R  7	    mov  ??0054,0; надо перекодировать
+	   00
+ 000002D2  B8 0000047A R     7	    mov  eax,offset ??0050
+ 000002D7  33 C9	     7	    xor  ecx,ecx
+ 000002D9  8A 10	     7	??0055: mov  dl,[eax]
+ 000002DB  88 91 0000047D R  7	    mov  ??0052[ecx],dl
+ 000002E1  40		     7	    inc  eax
+ 000002E2  41		     7	    inc  ecx
+ 000002E3  80 FA 00	     7	    cmp  dl,0
+ 000002E6  75 F1	     7	    jne  ??0055
+			     7	endif
+ 000002E8		     7	.code
+ 000002E8  B8 0000047D R     7	    mov  eax,offset ??0052
+ 000002ED  80 3D 00000008 R  7	    cmp  ??ConsoleMode,0
+	   00
+ 000002F4  75 19	     7	    jne  ??0056;   перекодирование выключено
+ 000002F6  80 3D 0000047C R  7	    cmp  ??0054,0
+	   00
+ 000002FD  75 10	     7	    jne  ??0056
+ 000002FF  50		     7	    push eax
+ 00000300  50		   *	    push   eax
+ 00000301  50		   *	    push   eax
+ 00000302  E8 00000000 E   *	    call   CharToOemA
+			     7	    invoke CharToOem,eax,eax; Windows to DOS
+ 00000307  C6 05 0000047C R  7	    mov  ??0054,1; Не надо перекодировать второй раз!
+	   01
+ 0000030E  58		     7	    pop  eax
+ 0000030F		     7	??0056:
+ 0000030F  50		   *	    push   eax
+ 00000310  E8 00000000 E   *	    call   StdOut
+			     6	    invoke StdOut,eax
+			     6	    ??RestoreReg
+ 00000315  5A		     7	    pop  edx
+ 00000316  59		     7	    pop  ecx
+ 00000317  58		     7	    pop  eax
+			     1	      local L
+ = 00000002		     1	      k=k+1
+ 00000318		     1	??0057: outintln k
+			     2	    outint k,,
+			     3	    OutNum k,,d,
+			     4	    local len,fmt,L1,L2,L3,L4,M1,M2,M3,tp
+			     4	ifnb <>
+			     4	    outstr 
+			     4	endif
+			     4	    ??SaveReg
+ 00000318  50		     5	    push eax
+ 00000319  51		     5	    push ecx
+ 0000031A  52		     5	    push edx
+ = 00000000		     4	    ??0058=0
+			     4	
+			     4	Comment #
+			     4	for i,<al,ah,bl,bh,cl,ch,dl,dh>
+			     4	  ifidni <i>,<x>
+			     4	    len=1
+			     4	    exitm
+			     4	  endif
+			     4	endm
+			     4	#
+			     4	
+			     4	if @SizeStr(k) GT 3
+			     4	  ifidni @SubStr(k,1,4),<type>
+			     4	     ??0058=1111
+			     4	  endif
+			     4	endif
+			     4	;-----------  byte<>sbyte !!!
+ = 00000000		     4	??0061= type (k)
+			     4	if ??0058 EQ 1111; Был outnum type ...;
+			     4	     mov  eax,(k)
+			     4	;elseif type (&x) EQ byte or type (&x) EQ sbyte or type (&x) EQ 2 or len EQ 1
+			     4	elseif ??0061 EQ 1 or ??0061 EQ 2			; or ??0058 EQ 1
+			     4	;  Знаковое и беззнаковое расширение до 4 байт
+			     4	   ifidni <d>,<d>
+			     4	      movsx eax,(k)
+			     4	   else
+			     4	      movzx eax,(k)
+			     4	   endif
+			     4	elseif ??0061 NE 8;   ==> type k EQ 0
+ 0000031B  B8 00000002	     4	       mov eax,k
+			     4	endif
+			     4	
+			     4	ifidni <k>,<esp>
+			     4	     add eax,12; коррекция 3*push
+			     4	endif
+			     4	
+			     4	ifidni <d>,<b>
+			     4	     xor  ebx,ebx; нет единиц
+			     4	if ??0061 EQ 8
+			     4	     mov  ecx,32
+			     4	     mov  eax,dword ptr k
+			     4	     mov  edx,dword ptr k+4
+			     4	??005E:  shl  edx,1
+			     4	     jc   ??005F
+			     4	     cmp  ebx,0
+			     4	     je   ??0060;      пропуск нулей
+			     4	     outchar '0'
+			     4	     jmp  ??0060
+			     4	??005F:  outchar '1'
+			     4	     inc  ebx;     была единица
+			     4	??0060:  dec  ecx
+			     4	     jne  ??005E
+			     4	endif
+			     4	     mov  ecx,32
+			     4	??005A:  shl  eax,1
+			     4	     jc   ??005B
+			     4	     cmp  ebx,0
+			     4	     je   ??005C;      пропуск нулей
+			     4	     outchar '0'
+			     4	     jmp  ??005C
+			     4	??005B:  outchar '1'
+			     4	     inc  ebx;     была единица
+			     4	??005C:  dec  ecx
+			     4	     jne  ??005A
+			     4	     test ebx,ebx
+			     4	     jne  ??005D
+			     4	     outchar '0'
+			     4	??005D:  outchar 'b'
+			     4	     ??RestoreReg
+			     4	     exitm
+			     4	endif 
+			     4	if ??0061 EQ 8
+			     4	.data
+			     4	??0059 db "%I64d",0
+			     4	.code
+			     4	     invoke crt_printf,offset ??0059,k
+			     4	else
+ 00000545		     4	.data
+ 00000545 25 64 00	     4	??0059 db "%d",0
+ 00000320		     4	.code
+ 00000320  50		   *	    push   eax
+ 00000321  68 00000545 R   *	    push   dword  ptr OFFSET FLAT:??0059
+ 00000326  FF 15 00000000 E *	    call   _imp__printf
+ 0000032C  83 C4 08	   *	    add    esp, 000000008h
+			     4	     invoke crt_printf,offset ??0059,eax
+			     4	endif
+			     4	
+			     4	ifidni <d>,<X>
+			     4	     outchar "h"
+			     4	endif
+			     4	     ??RestoreReg
+ 0000032F  5A		     5	    pop  edx
+ 00000330  59		     5	    pop  ecx
+ 00000331  58		     5	    pop  eax
+			     2	    newline
+			     3	repeat 1
+			     3	   outchar 13    
+			     3	   outchar 10
+			     3	endm
+			     4	   outchar 13    
+			     5	    local len,buf,L
+			     5	ifnb <>
+			     5	     outstr 
+			     5	endif
+ = 00000000		     5	    ??0062=0
+			     5	for i,<al,ah,bl,bh,cl,ch,dl,dh>
+			     5	ifidni <i>,<13>
+			     5	    ??0062=1
+			     5	    exitm
+			     5	endif
+			     5	endm
+			     6	ifidni <al>,<13>
+			     6	    ??0062=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <ah>,<13>
+			     6	    ??0062=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <bl>,<13>
+			     6	    ??0062=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <bh>,<13>
+			     6	    ??0062=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <cl>,<13>
+			     6	    ??0062=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <ch>,<13>
+			     6	    ??0062=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <dl>,<13>
+			     6	    ??0062=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <dh>,<13>
+			     6	    ??0062=1
+			     6	    exitm
+			     6	endif
+			     5	if ??0062 NE 1 and type (13) EQ 0; это операнд i8
+			     5	  if (13) GT 255 OR (13) LT 0
+			     5	    echo -----------------------------------------------
+			     5	    echo ***** Macros outchar: Big operand **** 13 ****
+			     5	    echo -----------------------------------------------
+			     5	    .err
+			     5	    exitm
+			     5	  endif  
+			     5	endif
+			     5	if ??0062 NE 1 and type (13) NE 1 and type (13) NE 0
+			     5	    echo -----------------------------------------------
+			     5	    echo ***** Macros outchar: Bad operand **** 13 ****
+			     5	    echo -----------------------------------------------
+			     5	    .err
+			     5	    exitm
+			     5	endif
+ 00000548		     5	.data
+ 00000548 00 00		     5	??0063  db 0,0
+ 00000332		     5	.code
+ 00000332  50		     5	    push eax
+ 00000333  B0 0D	     5	    mov  al,13
+ 00000335  A2 00000548 R     5	    mov  ??0063,al
+ 0000033A  58		     5	    pop  eax
+			     5	    outstr offset ??0063
+			     6	    ??SaveReg
+ 0000033B  50		     7	    push eax
+ 0000033C  51		     7	    push ecx
+ 0000033D  52		     7	    push edx
+			     6	    ??CheckStrToBuf offset ??0063
+			     7	    Local buf,c,n,L1,L2
+ = o			     7	??0066   SubStr <offset ??0063>,1,1
+			     7	ifidn ??0066,<'>
+			     7	;c   SubStr <">,1,1
+			     7	??0066   textequ <">
+			     7	endif
+ 0000054A		     7	.data
+ 0000054A 00		     7	??0067  db 0
+			     7	ifidn ??0066,<">
+			     7	??0065 db offset ??0063,0
+			     7	else
+ 0000054B  000000C8 [	     7	??0065 db 200 dup (0)
+	    00
+	   ]
+ 0000033E		     7	.code
+ 0000033E  C6 05 0000054A R  7	    mov  ??0067,0; надо перекодировать
+	   00
+ 00000345  B8 00000548 R     7	    mov  eax,offset ??0063
+ 0000034A  33 C9	     7	    xor  ecx,ecx
+ 0000034C  8A 10	     7	??0068: mov  dl,[eax]
+ 0000034E  88 91 0000054B R  7	    mov  ??0065[ecx],dl
+ 00000354  40		     7	    inc  eax
+ 00000355  41		     7	    inc  ecx
+ 00000356  80 FA 00	     7	    cmp  dl,0
+ 00000359  75 F1	     7	    jne  ??0068
+			     7	endif
+ 0000035B		     7	.code
+ 0000035B  B8 0000054B R     7	    mov  eax,offset ??0065
+ 00000360  80 3D 00000008 R  7	    cmp  ??ConsoleMode,0
+	   00
+ 00000367  75 19	     7	    jne  ??0069;   перекодирование выключено
+ 00000369  80 3D 0000054A R  7	    cmp  ??0067,0
+	   00
+ 00000370  75 10	     7	    jne  ??0069
+ 00000372  50		     7	    push eax
+ 00000373  50		   *	    push   eax
+ 00000374  50		   *	    push   eax
+ 00000375  E8 00000000 E   *	    call   CharToOemA
+			     7	    invoke CharToOem,eax,eax; Windows to DOS
+ 0000037A  C6 05 0000054A R  7	    mov  ??0067,1; Не надо перекодировать второй раз!
+	   01
+ 00000381  58		     7	    pop  eax
+ 00000382		     7	??0069:
+ 00000382  50		   *	    push   eax
+ 00000383  E8 00000000 E   *	    call   StdOut
+			     6	    invoke StdOut,eax
+			     6	    ??RestoreReg
+ 00000388  5A		     7	    pop  edx
+ 00000389  59		     7	    pop  ecx
+ 0000038A  58		     7	    pop  eax
+			     4	   outchar 10
+			     5	    local len,buf,L
+			     5	ifnb <>
+			     5	     outstr 
+			     5	endif
+ = 00000000		     5	    ??006A=0
+			     5	for i,<al,ah,bl,bh,cl,ch,dl,dh>
+			     5	ifidni <i>,<10>
+			     5	    ??006A=1
+			     5	    exitm
+			     5	endif
+			     5	endm
+			     6	ifidni <al>,<10>
+			     6	    ??006A=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <ah>,<10>
+			     6	    ??006A=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <bl>,<10>
+			     6	    ??006A=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <bh>,<10>
+			     6	    ??006A=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <cl>,<10>
+			     6	    ??006A=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <ch>,<10>
+			     6	    ??006A=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <dl>,<10>
+			     6	    ??006A=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <dh>,<10>
+			     6	    ??006A=1
+			     6	    exitm
+			     6	endif
+			     5	if ??006A NE 1 and type (10) EQ 0; это операнд i8
+			     5	  if (10) GT 255 OR (10) LT 0
+			     5	    echo -----------------------------------------------
+			     5	    echo ***** Macros outchar: Big operand **** 10 ****
+			     5	    echo -----------------------------------------------
+			     5	    .err
+			     5	    exitm
+			     5	  endif  
+			     5	endif
+			     5	if ??006A NE 1 and type (10) NE 1 and type (10) NE 0
+			     5	    echo -----------------------------------------------
+			     5	    echo ***** Macros outchar: Bad operand **** 10 ****
+			     5	    echo -----------------------------------------------
+			     5	    .err
+			     5	    exitm
+			     5	endif
+ 00000613		     5	.data
+ 00000613 00 00		     5	??006B  db 0,0
+ 0000038B		     5	.code
+ 0000038B  50		     5	    push eax
+ 0000038C  B0 0A	     5	    mov  al,10
+ 0000038E  A2 00000613 R     5	    mov  ??006B,al
+ 00000393  58		     5	    pop  eax
+			     5	    outstr offset ??006B
+			     6	    ??SaveReg
+ 00000394  50		     7	    push eax
+ 00000395  51		     7	    push ecx
+ 00000396  52		     7	    push edx
+			     6	    ??CheckStrToBuf offset ??006B
+			     7	    Local buf,c,n,L1,L2
+ = o			     7	??006E   SubStr <offset ??006B>,1,1
+			     7	ifidn ??006E,<'>
+			     7	;c   SubStr <">,1,1
+			     7	??006E   textequ <">
+			     7	endif
+ 00000615		     7	.data
+ 00000615 00		     7	??006F  db 0
+			     7	ifidn ??006E,<">
+			     7	??006D db offset ??006B,0
+			     7	else
+ 00000616  000000C8 [	     7	??006D db 200 dup (0)
+	    00
+	   ]
+ 00000397		     7	.code
+ 00000397  C6 05 00000615 R  7	    mov  ??006F,0; надо перекодировать
+	   00
+ 0000039E  B8 00000613 R     7	    mov  eax,offset ??006B
+ 000003A3  33 C9	     7	    xor  ecx,ecx
+ 000003A5  8A 10	     7	??0070: mov  dl,[eax]
+ 000003A7  88 91 00000616 R  7	    mov  ??006D[ecx],dl
+ 000003AD  40		     7	    inc  eax
+ 000003AE  41		     7	    inc  ecx
+ 000003AF  80 FA 00	     7	    cmp  dl,0
+ 000003B2  75 F1	     7	    jne  ??0070
+			     7	endif
+ 000003B4		     7	.code
+ 000003B4  B8 00000616 R     7	    mov  eax,offset ??006D
+ 000003B9  80 3D 00000008 R  7	    cmp  ??ConsoleMode,0
+	   00
+ 000003C0  75 19	     7	    jne  ??0071;   перекодирование выключено
+ 000003C2  80 3D 00000615 R  7	    cmp  ??006F,0
+	   00
+ 000003C9  75 10	     7	    jne  ??0071
+ 000003CB  50		     7	    push eax
+ 000003CC  50		   *	    push   eax
+ 000003CD  50		   *	    push   eax
+ 000003CE  E8 00000000 E   *	    call   CharToOemA
+			     7	    invoke CharToOem,eax,eax; Windows to DOS
+ 000003D3  C6 05 00000615 R  7	    mov  ??006F,1; Не надо перекодировать второй раз!
+	   01
+ 000003DA  58		     7	    pop  eax
+ 000003DB		     7	??0071:
+ 000003DB  50		   *	    push   eax
+ 000003DC  E8 00000000 E   *	    call   StdOut
+			     6	    invoke StdOut,eax
+			     6	    ??RestoreReg
+ 000003E1  5A		     7	    pop  edx
+ 000003E2  59		     7	    pop  ecx
+ 000003E3  58		     7	    pop  eax
+			     1	      local L
+ = 00000003		     1	      k=k+1
+ 000003E4		     1	??0072: outintln k
+			     2	    outint k,,
+			     3	    OutNum k,,d,
+			     4	    local len,fmt,L1,L2,L3,L4,M1,M2,M3,tp
+			     4	ifnb <>
+			     4	    outstr 
+			     4	endif
+			     4	    ??SaveReg
+ 000003E4  50		     5	    push eax
+ 000003E5  51		     5	    push ecx
+ 000003E6  52		     5	    push edx
+ = 00000000		     4	    ??0073=0
+			     4	
+			     4	Comment #
+			     4	for i,<al,ah,bl,bh,cl,ch,dl,dh>
+			     4	  ifidni <i>,<x>
+			     4	    len=1
+			     4	    exitm
+			     4	  endif
+			     4	endm
+			     4	#
+			     4	
+			     4	if @SizeStr(k) GT 3
+			     4	  ifidni @SubStr(k,1,4),<type>
+			     4	     ??0073=1111
+			     4	  endif
+			     4	endif
+			     4	;-----------  byte<>sbyte !!!
+ = 00000000		     4	??007C= type (k)
+			     4	if ??0073 EQ 1111; Был outnum type ...;
+			     4	     mov  eax,(k)
+			     4	;elseif type (&x) EQ byte or type (&x) EQ sbyte or type (&x) EQ 2 or len EQ 1
+			     4	elseif ??007C EQ 1 or ??007C EQ 2			; or ??0073 EQ 1
+			     4	;  Знаковое и беззнаковое расширение до 4 байт
+			     4	   ifidni <d>,<d>
+			     4	      movsx eax,(k)
+			     4	   else
+			     4	      movzx eax,(k)
+			     4	   endif
+			     4	elseif ??007C NE 8;   ==> type k EQ 0
+ 000003E7  B8 00000003	     4	       mov eax,k
+			     4	endif
+			     4	
+			     4	ifidni <k>,<esp>
+			     4	     add eax,12; коррекция 3*push
+			     4	endif
+			     4	
+			     4	ifidni <d>,<b>
+			     4	     xor  ebx,ebx; нет единиц
+			     4	if ??007C EQ 8
+			     4	     mov  ecx,32
+			     4	     mov  eax,dword ptr k
+			     4	     mov  edx,dword ptr k+4
+			     4	??0079:  shl  edx,1
+			     4	     jc   ??007A
+			     4	     cmp  ebx,0
+			     4	     je   ??007B;      пропуск нулей
+			     4	     outchar '0'
+			     4	     jmp  ??007B
+			     4	??007A:  outchar '1'
+			     4	     inc  ebx;     была единица
+			     4	??007B:  dec  ecx
+			     4	     jne  ??0079
+			     4	endif
+			     4	     mov  ecx,32
+			     4	??0075:  shl  eax,1
+			     4	     jc   ??0076
+			     4	     cmp  ebx,0
+			     4	     je   ??0077;      пропуск нулей
+			     4	     outchar '0'
+			     4	     jmp  ??0077
+			     4	??0076:  outchar '1'
+			     4	     inc  ebx;     была единица
+			     4	??0077:  dec  ecx
+			     4	     jne  ??0075
+			     4	     test ebx,ebx
+			     4	     jne  ??0078
+			     4	     outchar '0'
+			     4	??0078:  outchar 'b'
+			     4	     ??RestoreReg
+			     4	     exitm
+			     4	endif 
+			     4	if ??007C EQ 8
+			     4	.data
+			     4	??0074 db "%I64d",0
+			     4	.code
+			     4	     invoke crt_printf,offset ??0074,k
+			     4	else
+ 000006DE		     4	.data
+ 000006DE 25 64 00	     4	??0074 db "%d",0
+ 000003EC		     4	.code
+ 000003EC  50		   *	    push   eax
+ 000003ED  68 000006DE R   *	    push   dword  ptr OFFSET FLAT:??0074
+ 000003F2  FF 15 00000000 E *	    call   _imp__printf
+ 000003F8  83 C4 08	   *	    add    esp, 000000008h
+			     4	     invoke crt_printf,offset ??0074,eax
+			     4	endif
+			     4	
+			     4	ifidni <d>,<X>
+			     4	     outchar "h"
+			     4	endif
+			     4	     ??RestoreReg
+ 000003FB  5A		     5	    pop  edx
+ 000003FC  59		     5	    pop  ecx
+ 000003FD  58		     5	    pop  eax
+			     2	    newline
+			     3	repeat 1
+			     3	   outchar 13    
+			     3	   outchar 10
+			     3	endm
+			     4	   outchar 13    
+			     5	    local len,buf,L
+			     5	ifnb <>
+			     5	     outstr 
+			     5	endif
+ = 00000000		     5	    ??007D=0
+			     5	for i,<al,ah,bl,bh,cl,ch,dl,dh>
+			     5	ifidni <i>,<13>
+			     5	    ??007D=1
+			     5	    exitm
+			     5	endif
+			     5	endm
+			     6	ifidni <al>,<13>
+			     6	    ??007D=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <ah>,<13>
+			     6	    ??007D=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <bl>,<13>
+			     6	    ??007D=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <bh>,<13>
+			     6	    ??007D=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <cl>,<13>
+			     6	    ??007D=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <ch>,<13>
+			     6	    ??007D=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <dl>,<13>
+			     6	    ??007D=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <dh>,<13>
+			     6	    ??007D=1
+			     6	    exitm
+			     6	endif
+			     5	if ??007D NE 1 and type (13) EQ 0; это операнд i8
+			     5	  if (13) GT 255 OR (13) LT 0
+			     5	    echo -----------------------------------------------
+			     5	    echo ***** Macros outchar: Big operand **** 13 ****
+			     5	    echo -----------------------------------------------
+			     5	    .err
+			     5	    exitm
+			     5	  endif  
+			     5	endif
+			     5	if ??007D NE 1 and type (13) NE 1 and type (13) NE 0
+			     5	    echo -----------------------------------------------
+			     5	    echo ***** Macros outchar: Bad operand **** 13 ****
+			     5	    echo -----------------------------------------------
+			     5	    .err
+			     5	    exitm
+			     5	endif
+ 000006E1		     5	.data
+ 000006E1 00 00		     5	??007E  db 0,0
+ 000003FE		     5	.code
+ 000003FE  50		     5	    push eax
+ 000003FF  B0 0D	     5	    mov  al,13
+ 00000401  A2 000006E1 R     5	    mov  ??007E,al
+ 00000406  58		     5	    pop  eax
+			     5	    outstr offset ??007E
+			     6	    ??SaveReg
+ 00000407  50		     7	    push eax
+ 00000408  51		     7	    push ecx
+ 00000409  52		     7	    push edx
+			     6	    ??CheckStrToBuf offset ??007E
+			     7	    Local buf,c,n,L1,L2
+ = o			     7	??0081   SubStr <offset ??007E>,1,1
+			     7	ifidn ??0081,<'>
+			     7	;c   SubStr <">,1,1
+			     7	??0081   textequ <">
+			     7	endif
+ 000006E3		     7	.data
+ 000006E3 00		     7	??0082  db 0
+			     7	ifidn ??0081,<">
+			     7	??0080 db offset ??007E,0
+			     7	else
+ 000006E4  000000C8 [	     7	??0080 db 200 dup (0)
+	    00
+	   ]
+ 0000040A		     7	.code
+ 0000040A  C6 05 000006E3 R  7	    mov  ??0082,0; надо перекодировать
+	   00
+ 00000411  B8 000006E1 R     7	    mov  eax,offset ??007E
+ 00000416  33 C9	     7	    xor  ecx,ecx
+ 00000418  8A 10	     7	??0083: mov  dl,[eax]
+ 0000041A  88 91 000006E4 R  7	    mov  ??0080[ecx],dl
+ 00000420  40		     7	    inc  eax
+ 00000421  41		     7	    inc  ecx
+ 00000422  80 FA 00	     7	    cmp  dl,0
+ 00000425  75 F1	     7	    jne  ??0083
+			     7	endif
+ 00000427		     7	.code
+ 00000427  B8 000006E4 R     7	    mov  eax,offset ??0080
+ 0000042C  80 3D 00000008 R  7	    cmp  ??ConsoleMode,0
+	   00
+ 00000433  75 19	     7	    jne  ??0084;   перекодирование выключено
+ 00000435  80 3D 000006E3 R  7	    cmp  ??0082,0
+	   00
+ 0000043C  75 10	     7	    jne  ??0084
+ 0000043E  50		     7	    push eax
+ 0000043F  50		   *	    push   eax
+ 00000440  50		   *	    push   eax
+ 00000441  E8 00000000 E   *	    call   CharToOemA
+			     7	    invoke CharToOem,eax,eax; Windows to DOS
+ 00000446  C6 05 000006E3 R  7	    mov  ??0082,1; Не надо перекодировать второй раз!
+	   01
+ 0000044D  58		     7	    pop  eax
+ 0000044E		     7	??0084:
+ 0000044E  50		   *	    push   eax
+ 0000044F  E8 00000000 E   *	    call   StdOut
+			     6	    invoke StdOut,eax
+			     6	    ??RestoreReg
+ 00000454  5A		     7	    pop  edx
+ 00000455  59		     7	    pop  ecx
+ 00000456  58		     7	    pop  eax
+			     4	   outchar 10
+			     5	    local len,buf,L
+			     5	ifnb <>
+			     5	     outstr 
+			     5	endif
+ = 00000000		     5	    ??0085=0
+			     5	for i,<al,ah,bl,bh,cl,ch,dl,dh>
+			     5	ifidni <i>,<10>
+			     5	    ??0085=1
+			     5	    exitm
+			     5	endif
+			     5	endm
+			     6	ifidni <al>,<10>
+			     6	    ??0085=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <ah>,<10>
+			     6	    ??0085=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <bl>,<10>
+			     6	    ??0085=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <bh>,<10>
+			     6	    ??0085=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <cl>,<10>
+			     6	    ??0085=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <ch>,<10>
+			     6	    ??0085=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <dl>,<10>
+			     6	    ??0085=1
+			     6	    exitm
+			     6	endif
+			     6	ifidni <dh>,<10>
+			     6	    ??0085=1
+			     6	    exitm
+			     6	endif
+			     5	if ??0085 NE 1 and type (10) EQ 0; это операнд i8
+			     5	  if (10) GT 255 OR (10) LT 0
+			     5	    echo -----------------------------------------------
+			     5	    echo ***** Macros outchar: Big operand **** 10 ****
+			     5	    echo -----------------------------------------------
+			     5	    .err
+			     5	    exitm
+			     5	  endif  
+			     5	endif
+			     5	if ??0085 NE 1 and type (10) NE 1 and type (10) NE 0
+			     5	    echo -----------------------------------------------
+			     5	    echo ***** Macros outchar: Bad operand **** 10 ****
+			     5	    echo -----------------------------------------------
+			     5	    .err
+			     5	    exitm
+			     5	endif
+ 000007AC		     5	.data
+ 000007AC 00 00		     5	??0086  db 0,0
+ 00000457		     5	.code
+ 00000457  50		     5	    push eax
+ 00000458  B0 0A	     5	    mov  al,10
+ 0000045A  A2 000007AC R     5	    mov  ??0086,al
+ 0000045F  58		     5	    pop  eax
+			     5	    outstr offset ??0086
+			     6	    ??SaveReg
+ 00000460  50		     7	    push eax
+ 00000461  51		     7	    push ecx
+ 00000462  52		     7	    push edx
+			     6	    ??CheckStrToBuf offset ??0086
+			     7	    Local buf,c,n,L1,L2
+ = o			     7	??0089   SubStr <offset ??0086>,1,1
+			     7	ifidn ??0089,<'>
+			     7	;c   SubStr <">,1,1
+			     7	??0089   textequ <">
+			     7	endif
+ 000007AE		     7	.data
+ 000007AE 00		     7	??008A  db 0
+			     7	ifidn ??0089,<">
+			     7	??0088 db offset ??0086,0
+			     7	else
+ 000007AF  000000C8 [	     7	??0088 db 200 dup (0)
+	    00
+	   ]
+ 00000463		     7	.code
+ 00000463  C6 05 000007AE R  7	    mov  ??008A,0; надо перекодировать
+	   00
+ 0000046A  B8 000007AC R     7	    mov  eax,offset ??0086
+ 0000046F  33 C9	     7	    xor  ecx,ecx
+ 00000471  8A 10	     7	??008B: mov  dl,[eax]
+ 00000473  88 91 000007AF R  7	    mov  ??0088[ecx],dl
+ 00000479  40		     7	    inc  eax
+ 0000047A  41		     7	    inc  ecx
+ 0000047B  80 FA 00	     7	    cmp  dl,0
+ 0000047E  75 F1	     7	    jne  ??008B
+			     7	endif
+ 00000480		     7	.code
+ 00000480  B8 000007AF R     7	    mov  eax,offset ??0088
+ 00000485  80 3D 00000008 R  7	    cmp  ??ConsoleMode,0
+	   00
+ 0000048C  75 19	     7	    jne  ??008C;   перекодирование выключено
+ 0000048E  80 3D 000007AE R  7	    cmp  ??008A,0
+	   00
+ 00000495  75 10	     7	    jne  ??008C
+ 00000497  50		     7	    push eax
+ 00000498  50		   *	    push   eax
+ 00000499  50		   *	    push   eax
+ 0000049A  E8 00000000 E   *	    call   CharToOemA
+			     7	    invoke CharToOem,eax,eax; Windows to DOS
+ 0000049F  C6 05 000007AE R  7	    mov  ??008A,1; Не надо перекодировать второй раз!
+	   01
+ 000004A6  58		     7	    pop  eax
+ 000004A7		     7	??008C:
+ 000004A7  50		   *	    push   eax
+ 000004A8  E8 00000000 E   *	    call   StdOut
+			     6	    invoke StdOut,eax
+			     6	    ??RestoreReg
+ 000004AD  5A		     7	    pop  edx
+ 000004AE  59		     7	    pop  ecx
+ 000004AF  58		     7	    pop  eax
+
+				   exit
+ 000004B0  FC		     1	    cld;           Иначе AVOST
+ 000004B1  6A 00	     1	    push 0
+ 000004B3  E8 00000000 E     1	    call ExitProcess
+
+				   MsgBox " Конец программы", \
+				          <"Повторить",13,10,"программу",13,10,"с начала ?">, \
+				          MB_YESNO+MB_ICONQUESTION
+			     1	    local t1,t2,L,Par1,Par2,c
+ 000004B8  51		     1	    push ecx
+ 000004B9  52		     1	    push edx
+			     1	    ConsoleMode; выключить перекодировку
+ 000004BA  F6 15 00000008 R  2	    not ??ConsoleMode
+			     1	    ??CheckStrToBuf " Конец программы"
+			     2	    Local buf,c,n,L1,L2
+ = "			     2	??0094   SubStr <" Конец программы">,1,1
+			     2	ifidn ??0094,<'>
+			     2	;c   SubStr <">,1,1
+			     2	??0094   textequ <">
+			     2	endif
+ 00000877		     2	.data
+ 00000877 00		     2	??0095  db 0
+			     2	ifidn ??0094,<">
+ 00000878 20 CA EE ED E5     2	??0093 db " Конец программы",0
+	   F6 20 EF F0 EE
+	   E3 F0 E0 EC EC
+	   FB 00
+			     2	else
+			     2	??0093 db 200 dup (0)
+			     2	.code
+			     2	    mov  ??0095,0; надо перекодировать
+			     2	    mov  eax," Конец программы"
+			     2	    xor  ecx,ecx
+			     2	??0096: mov  dl,[eax]
+			     2	    mov  ??0093[ecx],dl
+			     2	    inc  eax
+			     2	    inc  ecx
+			     2	    cmp  dl,0
+			     2	    jne  ??0096
+			     2	endif
+ 000004C0		     2	.code
+ 000004C0  B8 00000878 R     2	    mov  eax,offset ??0093
+ 000004C5  80 3D 00000008 R  2	    cmp  ??ConsoleMode,0
+	   00
+ 000004CC  75 19	     2	    jne  ??0097;   перекодирование выключено
+ 000004CE  80 3D 00000877 R  2	    cmp  ??0095,0
+	   00
+ 000004D5  75 10	     2	    jne  ??0097
+ 000004D7  50		     2	    push eax
+ 000004D8  50		   *	    push   eax
+ 000004D9  50		   *	    push   eax
+ 000004DA  E8 00000000 E   *	    call   CharToOemA
+			     2	    invoke CharToOem,eax,eax; Windows to DOS
+ 000004DF  C6 05 00000877 R  2	    mov  ??0095,1; Не надо перекодировать второй раз!
+	   01
+ 000004E6  58		     2	    pop  eax
+ 000004E7		     2	??0097:
+ 000004E7  50		     1	    push eax
+			     1	    ??CheckStrToBuf "Повторить",13,10,"программу",13,10,"с начала ?"
+			     2	    Local buf,c,n,L1,L2
+ = "			     2	??0099   SubStr <"Повторить",13,10,"программу",13,10,"с начала ?">,1,1
+			     2	ifidn ??0099,<'>
+			     2	;c   SubStr <">,1,1
+			     2	??0099   textequ <">
+			     2	endif
+ 00000889		     2	.data
+ 00000889 00		     2	??009A  db 0
+			     2	ifidn ??0099,<">
+ 0000088A CF EE E2 F2 EE     2	??0098 db "Повторить",13,10,"программу",13,10,"с начала ?",0
+	   F0 E8 F2 FC 0D
+	   0A EF F0 EE E3
+	   F0 E0 EC EC F3
+	   0D 0A F1 20 ED
+	   E0 F7 E0 EB E0
+	   20 3F 00
+			     2	else
+			     2	??0098 db 200 dup (0)
+			     2	.code
+			     2	    mov  ??009A,0; надо перекодировать
+			     2	    mov  eax,"Повторить",13,10,"программу",13,10,"с начала ?"
+			     2	    xor  ecx,ecx
+			     2	??009B: mov  dl,[eax]
+			     2	    mov  ??0098[ecx],dl
+			     2	    inc  eax
+			     2	    inc  ecx
+			     2	    cmp  dl,0
+			     2	    jne  ??009B
+			     2	endif
+ 000004E8		     2	.code
+ 000004E8  B8 0000088A R     2	    mov  eax,offset ??0098
+ 000004ED  80 3D 00000008 R  2	    cmp  ??ConsoleMode,0
+	   00
+ 000004F4  75 19	     2	    jne  ??009C;   перекодирование выключено
+ 000004F6  80 3D 00000889 R  2	    cmp  ??009A,0
+	   00
+ 000004FD  75 10	     2	    jne  ??009C
+ 000004FF  50		     2	    push eax
+ 00000500  50		   *	    push   eax
+ 00000501  50		   *	    push   eax
+ 00000502  E8 00000000 E   *	    call   CharToOemA
+			     2	    invoke CharToOem,eax,eax; Windows to DOS
+ 00000507  C6 05 00000889 R  2	    mov  ??009A,1; Не надо перекодировать второй раз!
+	   01
+ 0000050E  58		     2	    pop  eax
+ 0000050F		     2	??009C:
+ 0000050F  5A		     1	    pop  edx; Cap
+ 00000510  68 00001024	   *	    push   +000001024h
+ 00000515  52		   *	    push   edx
+ 00000516  50		   *	    push   eax
+ 00000517  6A 00	   *	    push   +000000000h
+ 00000519  E8 00000000 E   *	    call   MessageBoxA
+			     1	    invoke MessageBox,NULL,eax,edx,MB_YESNO+MB_ICONQUESTION+MB_SYSTEMMODAL
+			     1	    ConsoleMode; включить перекодировку
+ 0000051E  F6 15 00000008 R  2	    not ??ConsoleMode
+ 00000524  5A		     1	    pop   edx
+ 00000525  59		     1	    pop   ecx
+ 00000526  83 F8 06		   cmp eax,IDYES
+ 00000529  0F 84 FFFFFAD1	   je  Start
+				   
+ 0000052F			KOH:   
+				   exit
+ 0000052F  FC		     1	    cld;           Иначе AVOST
+ 00000530  6A 00	     1	    push 0
+ 00000532  E8 00000000 E     1	    call ExitProcess
+				   end Start
+Microsoft (R) Macro Assembler Version 6.14.8444		    02/19/18 17:04:39
+a.asm							     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+??CheckStrToBuf  . . . . . . . .	Proc
+??RestoreReg . . . . . . . . . .	Proc
+??SaveReg  . . . . . . . . . . .	Proc
+@inchar  . . . . . . . . . . . .	Func
+@inintln . . . . . . . . . . . .	Func
+@inint . . . . . . . . . . . . .	Func
+@readkey . . . . . . . . . . . .	Func
+ChagePageAttr  . . . . . . . . .	Proc
+ClrScr . . . . . . . . . . . . .	Proc
+ConsoleMode  . . . . . . . . . .	Proc
+ConsoleTitle . . . . . . . . . .	Proc
+DOS  . . . . . . . . . . . . . .	Func
+DownloadFile . . . . . . . . . .	Proc
+GetConsoleTitle  . . . . . . . .	Proc
+HeapBlockSize  . . . . . . . . .	Proc
+InputStr . . . . . . . . . . . .	Proc
+Maxn . . . . . . . . . . . . . .	Func
+MsgBox . . . . . . . . . . . . .	Proc
+NewConsole . . . . . . . . . . .	Proc
+OpenFile . . . . . . . . . . . .	Proc
+OutFlafs . . . . . . . . . . . .	Proc
+RunExe . . . . . . . . . . . . .	Proc
+SelfModify . . . . . . . . . . .	Proc
+SetScreenSize  . . . . . . . . .	Proc
+SetTextAttr  . . . . . . . . . .	Proc
+TotalHeapAllocated . . . . . . .	Proc
+WhereX . . . . . . . . . . . . .	Proc
+WhereY . . . . . . . . . . . . .	Proc
+dispose  . . . . . . . . . . . .	Proc
+exit . . . . . . . . . . . . . .	Proc
+flush  . . . . . . . . . . . . .	Proc
+gotoXY . . . . . . . . . . . . .	Proc
+inchar . . . . . . . . . . . . .	Proc
+inintln  . . . . . . . . . . . .	Proc
+inint  . . . . . . . . . . . . .	Proc
+newline  . . . . . . . . . . . .	Proc
+new  . . . . . . . . . . . . . .	Proc
+outcharln  . . . . . . . . . . .	Proc
+outchar  . . . . . . . . . . . .	Proc
+outdateln  . . . . . . . . . . .	Proc
+outdate  . . . . . . . . . . . .	Proc
+outintln . . . . . . . . . . . .	Proc
+outint . . . . . . . . . . . . .	Proc
+outnumln . . . . . . . . . . . .	Proc
+outnum . . . . . . . . . . . . .	Proc
+outstrln . . . . . . . . . . . .	Proc
+outstr . . . . . . . . . . . . .	Proc
+outtimeln  . . . . . . . . . . .	Proc
+outtime  . . . . . . . . . . . .	Proc
+outwordln  . . . . . . . . . . .	Proc
+outword  . . . . . . . . . . . .	Proc
+pause  . . . . . . . . . . . . .	Proc
+readkey  . . . . . . . . . . . .	Proc
+
+
+Structures and Unions:
+
+                N a m e                  Size
+                                         Offset      Type
+
+CONSOLE_SCREEN_BUFFER_INFO . . .	 00000016
+  dwSize . . . . . . . . . . . .	 00000000	 DWord
+  dwCursorPosition . . . . . . .	 00000004	 DWord
+  wAttributes  . . . . . . . . .	 00000008	 Word
+  srWindow . . . . . . . . . . .	 0000000A	 QWord
+  dwMaximumWindowSize  . . . . .	 00000012	 DWord
+COORD  . . . . . . . . . . . . .	 00000004
+  x  . . . . . . . . . . . . . .	 00000000	 Word
+  y  . . . . . . . . . . . . . .	 00000002	 Word
+SMALL_RECT . . . . . . . . . . .	 00000008
+  Left . . . . . . . . . . . . .	 00000000	 Word
+  Top  . . . . . . . . . . . . .	 00000002	 Word
+  Right  . . . . . . . . . . . .	 00000004	 Word
+  Bottom . . . . . . . . . . . .	 00000006	 Word
+SystemTime . . . . . . . . . . .	 00000010
+  wYear  . . . . . . . . . . . .	 00000000	 Word
+  wMonth . . . . . . . . . . . .	 00000002	 Word
+  wDayOfWeek . . . . . . . . . .	 00000004	 Word
+  wDay . . . . . . . . . . . . .	 00000006	 Word
+  wHour  . . . . . . . . . . . .	 00000008	 Word
+  wMinute  . . . . . . . . . . .	 0000000A	 Word
+  wSecond  . . . . . . . . . . .	 0000000C	 Word
+  wMilliseconds  . . . . . . . .	 0000000E	 Word
+
+
+Types:
+
+                N a m e                  Size     Attr
+
+c_msvcrt . . . . . . . . . . . .	 00000004     CODE 
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 000008AB Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000537 Para	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+CharToOemA . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ClearScreen  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+CloseHandle  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+CreateFileA  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetCommandLineA  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetConsoleScreenBufferInfo . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetConsoleTitleA . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetModuleHandleA . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetStdHandle . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetSystemMetrics . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetSystemTime  . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GlobalAlloc  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GlobalFree . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GlobalSize . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+InternetGetConnectedState  . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+MessageBoxA  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+MessageBoxIndirectA  . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetConsoleCursorPosition . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetConsoleScreenBufferSize . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetConsoleTextAttribute  . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetConsoleTitleA . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+StdIn  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+StdOut . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+URLDownloadToFileA . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+VirtualProtect . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+shell_ex . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+shell  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+wait_key . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+??0000 . . . . . . . . . . . . .	Byte	 0000001A _DATA	
+??0001 . . . . . . . . . . . . .	Text   	 "
+??0002 . . . . . . . . . . . . .	Byte	 00000019 _DATA	
+??0004 . . . . . . . . . . . . .	L Near	 0000002A _TEXT	
+??0005 . . . . . . . . . . . . .	Byte	 00000039 _DATA	
+??0006 . . . . . . . . . . . . .	Text   	 "
+??0007 . . . . . . . . . . . . .	Byte	 00000038 _DATA	
+??0009 . . . . . . . . . . . . .	L Near	 0000005D _TEXT	
+??000A . . . . . . . . . . . . .	Number	 00000000h   
+??000B . . . . . . . . . . . . .	Byte	 0000004C _DATA	
+??000D . . . . . . . . . . . . .	Byte	 0000004F _DATA	
+??000E . . . . . . . . . . . . .	Text   	 o
+??000F . . . . . . . . . . . . .	Byte	 0000004E _DATA	
+??0010 . . . . . . . . . . . . .	L Near	 0000008B _TEXT	
+??0011 . . . . . . . . . . . . .	L Near	 000000C1 _TEXT	
+??0012 . . . . . . . . . . . . .	Number	 00000000h   
+??0013 . . . . . . . . . . . . .	Byte	 00000117 _DATA	
+??0015 . . . . . . . . . . . . .	Byte	 0000011A _DATA	
+??0016 . . . . . . . . . . . . .	Text   	 o
+??0017 . . . . . . . . . . . . .	Byte	 00000119 _DATA	
+??0018 . . . . . . . . . . . . .	L Near	 000000E4 _TEXT	
+??0019 . . . . . . . . . . . . .	L Near	 0000011A _TEXT	
+??001A . . . . . . . . . . . . .	Byte	 000001E3 _DATA	
+??001B . . . . . . . . . . . . .	Text   	 "
+??001C . . . . . . . . . . . . .	Byte	 000001E2 _DATA	
+??001E . . . . . . . . . . . . .	L Near	 00000152 _TEXT	
+??001F . . . . . . . . . . . . .	L Near	 0000016F _TEXT	
+??0020 . . . . . . . . . . . . .	L Near	 00000179 _TEXT	
+??0021 . . . . . . . . . . . . .	L Near	 00000183 _TEXT	
+??0022 . . . . . . . . . . . . .	Number	 00000000h   
+??0023 . . . . . . . . . . . . .	Byte	 00000213 _DATA	
+??002B . . . . . . . . . . . . .	Number	 00000004h   
+??002C . . . . . . . . . . . . .	Number	 00000000h   
+??002D . . . . . . . . . . . . .	Byte	 00000216 _DATA	
+??002F . . . . . . . . . . . . .	Byte	 00000219 _DATA	
+??0030 . . . . . . . . . . . . .	Text   	 o
+??0031 . . . . . . . . . . . . .	Byte	 00000218 _DATA	
+??0032 . . . . . . . . . . . . .	L Near	 000001B4 _TEXT	
+??0033 . . . . . . . . . . . . .	L Near	 000001EA _TEXT	
+??0034 . . . . . . . . . . . . .	Number	 00000000h   
+??0035 . . . . . . . . . . . . .	Byte	 000002E1 _DATA	
+??0037 . . . . . . . . . . . . .	Byte	 000002E4 _DATA	
+??0038 . . . . . . . . . . . . .	Text   	 o
+??0039 . . . . . . . . . . . . .	Byte	 000002E3 _DATA	
+??003A . . . . . . . . . . . . .	L Near	 0000020D _TEXT	
+??003B . . . . . . . . . . . . .	L Near	 00000243 _TEXT	
+??003C . . . . . . . . . . . . .	L Near	 0000024C _TEXT	
+??003D . . . . . . . . . . . . .	Number	 00000000h   
+??003E . . . . . . . . . . . . .	Byte	 000003AC _DATA	
+??0046 . . . . . . . . . . . . .	Number	 00000000h   
+??0047 . . . . . . . . . . . . .	Number	 00000000h   
+??0048 . . . . . . . . . . . . .	Byte	 000003AF _DATA	
+??004A . . . . . . . . . . . . .	Byte	 000003B2 _DATA	
+??004B . . . . . . . . . . . . .	Text   	 o
+??004C . . . . . . . . . . . . .	Byte	 000003B1 _DATA	
+??004D . . . . . . . . . . . . .	L Near	 00000280 _TEXT	
+??004E . . . . . . . . . . . . .	L Near	 000002B6 _TEXT	
+??004F . . . . . . . . . . . . .	Number	 00000000h   
+??0050 . . . . . . . . . . . . .	Byte	 0000047A _DATA	
+??0052 . . . . . . . . . . . . .	Byte	 0000047D _DATA	
+??0053 . . . . . . . . . . . . .	Text   	 o
+??0054 . . . . . . . . . . . . .	Byte	 0000047C _DATA	
+??0055 . . . . . . . . . . . . .	L Near	 000002D9 _TEXT	
+??0056 . . . . . . . . . . . . .	L Near	 0000030F _TEXT	
+??0057 . . . . . . . . . . . . .	L Near	 00000318 _TEXT	
+??0058 . . . . . . . . . . . . .	Number	 00000000h   
+??0059 . . . . . . . . . . . . .	Byte	 00000545 _DATA	
+??0061 . . . . . . . . . . . . .	Number	 00000000h   
+??0062 . . . . . . . . . . . . .	Number	 00000000h   
+??0063 . . . . . . . . . . . . .	Byte	 00000548 _DATA	
+??0065 . . . . . . . . . . . . .	Byte	 0000054B _DATA	
+??0066 . . . . . . . . . . . . .	Text   	 o
+??0067 . . . . . . . . . . . . .	Byte	 0000054A _DATA	
+??0068 . . . . . . . . . . . . .	L Near	 0000034C _TEXT	
+??0069 . . . . . . . . . . . . .	L Near	 00000382 _TEXT	
+??006A . . . . . . . . . . . . .	Number	 00000000h   
+??006B . . . . . . . . . . . . .	Byte	 00000613 _DATA	
+??006D . . . . . . . . . . . . .	Byte	 00000616 _DATA	
+??006E . . . . . . . . . . . . .	Text   	 o
+??006F . . . . . . . . . . . . .	Byte	 00000615 _DATA	
+??0070 . . . . . . . . . . . . .	L Near	 000003A5 _TEXT	
+??0071 . . . . . . . . . . . . .	L Near	 000003DB _TEXT	
+??0072 . . . . . . . . . . . . .	L Near	 000003E4 _TEXT	
+??0073 . . . . . . . . . . . . .	Number	 00000000h   
+??0074 . . . . . . . . . . . . .	Byte	 000006DE _DATA	
+??007C . . . . . . . . . . . . .	Number	 00000000h   
+??007D . . . . . . . . . . . . .	Number	 00000000h   
+??007E . . . . . . . . . . . . .	Byte	 000006E1 _DATA	
+??0080 . . . . . . . . . . . . .	Byte	 000006E4 _DATA	
+??0081 . . . . . . . . . . . . .	Text   	 o
+??0082 . . . . . . . . . . . . .	Byte	 000006E3 _DATA	
+??0083 . . . . . . . . . . . . .	L Near	 00000418 _TEXT	
+??0084 . . . . . . . . . . . . .	L Near	 0000044E _TEXT	
+??0085 . . . . . . . . . . . . .	Number	 00000000h   
+??0086 . . . . . . . . . . . . .	Byte	 000007AC _DATA	
+??0088 . . . . . . . . . . . . .	Byte	 000007AF _DATA	
+??0089 . . . . . . . . . . . . .	Text   	 o
+??008A . . . . . . . . . . . . .	Byte	 000007AE _DATA	
+??008B . . . . . . . . . . . . .	L Near	 00000471 _TEXT	
+??008C . . . . . . . . . . . . .	L Near	 000004A7 _TEXT	
+??0093 . . . . . . . . . . . . .	Byte	 00000878 _DATA	
+??0094 . . . . . . . . . . . . .	Text   	 "
+??0095 . . . . . . . . . . . . .	Byte	 00000877 _DATA	
+??0097 . . . . . . . . . . . . .	L Near	 000004E7 _TEXT	
+??0098 . . . . . . . . . . . . .	Byte	 0000088A _DATA	
+??0099 . . . . . . . . . . . . .	Text   	 "
+??009A . . . . . . . . . . . . .	Byte	 00000889 _DATA	
+??009C . . . . . . . . . . . . .	L Near	 0000050F _TEXT	
+??CommonHeapElemSize . . . . . .	DWord	 00000004 _DATA	
+??ConsoleMode  . . . . . . . . .	Byte	 00000008 _DATA	
+??TotalHeapAllocated . . . . . .	DWord	 00000000 _DATA	
+??sTime  . . . . . . . . . . . .	SystemTime  00000009 _DATA	
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@InChar  . . . . . . . . . . . .	Text   	 @inchar
+@InInt . . . . . . . . . . . . .	Text   	 @inint
+@Inchar  . . . . . . . . . . . .	Text   	 @inchar
+@InintLn . . . . . . . . . . . .	Text   	 @inintln
+@Inintln . . . . . . . . . . . .	Text   	 @inintln
+@Inint . . . . . . . . . . . . .	Text   	 @inint
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@ReadKey . . . . . . . . . . . .	Text   	 @readkey
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+AllocConsole@0 . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+Black  . . . . . . . . . . . . .	Number	 00000000h   
+Blue . . . . . . . . . . . . . .	Number	 00000001h   
+Bright . . . . . . . . . . . . .	Number	 00000008h   
+Brown  . . . . . . . . . . . . .	Number	 00000006h   
+CREATE_ALWAYS  . . . . . . . . .	Number	 00000002h   
+CREATE_NEW . . . . . . . . . . .	Number	 00000001h   
+CharToOem  . . . . . . . . . . .	Text   	 CharToOemA
+Cls  . . . . . . . . . . . . . .	Text   	 ClrScr
+CreateFile . . . . . . . . . . .	Text   	 CreateFileA
+Cyan . . . . . . . . . . . . . .	Number	 00000003h   
+DarkGray . . . . . . . . . . . .	Number	 00000008h   
+Dispose  . . . . . . . . . . . .	Text   	 dispose
+Exit . . . . . . . . . . . . . .	Text   	 exit
+FILE_ATTRIBUTE_ARCHIVE . . . . .	Number	 00000020h   
+FILE_ATTRIBUTE_COMPRESSED  . . .	Number	 00000800h   
+FILE_ATTRIBUTE_DIRECTORY . . . .	Number	 00000010h   
+FILE_ATTRIBUTE_HIDDEN  . . . . .	Number	 00000002h   
+FILE_ATTRIBUTE_NORMAL  . . . . .	Number	 00000080h   
+FILE_ATTRIBUTE_READONLY  . . . .	Number	 00000001h   
+FILE_ATTRIBUTE_SYSTEM  . . . . .	Number	 00000004h   
+FILE_ATTRIBUTE_TEMPORARY . . . .	Number	 00000100h   
+Flush  . . . . . . . . . . . . .	Text   	 flush
+FreeConsole@0  . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+GENERIC_ALL  . . . . . . . . . .	Number	 10000000h   
+GENERIC_EXECUTE  . . . . . . . .	Number	 20000000h   
+GENERIC_READ . . . . . . . . . .	Number	 -80000000h   
+GENERIC_WRITE  . . . . . . . . .	Number	 40000000h   
+GMEM_FIXED . . . . . . . . . . .	Number	 00000000h   
+GMEM_ZEROINIT  . . . . . . . . .	Number	 00000040h   
+GetCommandLine . . . . . . . . .	Text   	 GetCommandLineA
+GetModuleHandle  . . . . . . . .	Text   	 GetModuleHandleA
+GotoXY . . . . . . . . . . . . .	Text   	 gotoXY
+Green  . . . . . . . . . . . . .	Number	 00000002h   
+IDABORT  . . . . . . . . . . . .	Number	 00000003h   
+IDCANCEL . . . . . . . . . . . .	Number	 00000002h   
+IDIGNORE . . . . . . . . . . . .	Number	 00000005h   
+IDNO . . . . . . . . . . . . . .	Number	 00000007h   
+IDOK . . . . . . . . . . . . . .	Number	 00000001h   
+IDRETRY  . . . . . . . . . . . .	Number	 00000004h   
+IDYES  . . . . . . . . . . . . .	Number	 00000006h   
+InChar . . . . . . . . . . . . .	Text   	 inchar
+InInt  . . . . . . . . . . . . .	Text   	 inint
+Inchar . . . . . . . . . . . . .	Text   	 inchar
+InintLn  . . . . . . . . . . . .	Text   	 inintln
+Inintln  . . . . . . . . . . . .	Text   	 inintln
+Inint  . . . . . . . . . . . . .	Text   	 inint
+KOH  . . . . . . . . . . . . . .	L Near	 0000052F _TEXT	
+LANG_NEUTRAL . . . . . . . . . .	Number	 00000000h   
+LightBlue  . . . . . . . . . . .	Number	 00000009h   
+LightGray  . . . . . . . . . . .	Number	 00000007h   
+LightGreen . . . . . . . . . . .	Number	 0000000Ah   
+LightMagenta . . . . . . . . . .	Number	 0000000Dh   
+LightRed . . . . . . . . . . . .	Number	 0000000Ch   
+MB_ABORTRETRYIGNORE  . . . . . .	Number	 00000002h   
+MB_CANCELTRYCONTINUE . . . . . .	Number	 00000006h   
+MB_DEFBUTTON1  . . . . . . . . .	Number	 00000000h   
+MB_DEFBUTTON2  . . . . . . . . .	Number	 00000100h   
+MB_DEFBUTTON3  . . . . . . . . .	Number	 00000200h   
+MB_DEFBUTTON4  . . . . . . . . .	Number	 00000300h   
+MB_HELP  . . . . . . . . . . . .	Number	 00004000h   
+MB_ICONASTERISK  . . . . . . . .	Number	 00000040h   
+MB_ICONEXCLAMATION . . . . . . .	Number	 00000030h   
+MB_ICONHAND  . . . . . . . . . .	Number	 00000008h   
+MB_ICONQUESTION  . . . . . . . .	Number	 00000020h   
+MB_ICONSTOP  . . . . . . . . . .	Number	 00000010h   
+MB_OKCANCEL  . . . . . . . . . .	Number	 00000001h   
+MB_OK  . . . . . . . . . . . . .	Number	 00000000h   
+MB_RETRYCANCEL . . . . . . . . .	Number	 00000005h   
+MB_RIGHT . . . . . . . . . . . .	Number	 00080000h   
+MB_SYSTEMMODAL . . . . . . . . .	Number	 00001000h   
+MB_USERICON  . . . . . . . . . .	Number	 00000080h   
+MB_YESNOCANCEL . . . . . . . . .	Number	 00000003h   
+MB_YESNO . . . . . . . . . . . .	Number	 00000004h   
+Magenta  . . . . . . . . . . . .	Number	 00000005h   
+MessageBoxIndirect . . . . . . .	Text   	 MessageBoxIndirectA
+MessageBox . . . . . . . . . . .	Text   	 MessageBoxA
+NULL . . . . . . . . . . . . . .	Number	 00000000h   
+NewLine  . . . . . . . . . . . .	Text   	 newline
+Newline  . . . . . . . . . . . .	Text   	 newline
+New  . . . . . . . . . . . . . .	Text   	 new
+OPEN_ALWAYS  . . . . . . . . . .	Number	 00000004h   
+OPEN_EXISTING  . . . . . . . . .	Number	 00000003h   
+OutCharLn  . . . . . . . . . . .	Text   	 outcharln
+OutCharln  . . . . . . . . . . .	Text   	 outcharln
+OutChar  . . . . . . . . . . . .	Text   	 outchar,prompt:VARARG
+OutDateLn  . . . . . . . . . . .	Text   	 outdateln
+OutDateln  . . . . . . . . . . .	Text   	 outdateln
+OutDate  . . . . . . . . . . . .	Text   	 outdate
+OutILn . . . . . . . . . . . . .	Text   	 outintln
+OutIln . . . . . . . . . . . . .	Text   	 outintln
+OutIntLn . . . . . . . . . . . .	Text   	 outintln
+OutInt . . . . . . . . . . . . .	Text   	 outint
+OutI . . . . . . . . . . . . . .	Text   	 outint
+OutNumLn . . . . . . . . . . . .	Text   	 outnumln
+OutNumln . . . . . . . . . . . .	Text   	 outnumln
+OutNum . . . . . . . . . . . . .	Text   	 outnum
+OutStrLn . . . . . . . . . . . .	Text   	 outstrln
+OutStr . . . . . . . . . . . . .	Text   	 outstr
+OutTimeLn  . . . . . . . . . . .	Text   	 outtimeln
+OutTimeln  . . . . . . . . . . .	Text   	 outtimeln
+OutTime  . . . . . . . . . . . .	Text   	 outtime
+OutULn . . . . . . . . . . . . .	Text   	 outwordln
+OutUln . . . . . . . . . . . . .	Text   	 outwordln
+OutUnsignedLn  . . . . . . . . .	Text   	 outwordln
+OutUnsignedln  . . . . . . . . .	Text   	 outwordln
+OutUnsigned  . . . . . . . . . .	Text   	 outword
+OutU . . . . . . . . . . . . . .	Text   	 outword
+OutWordLn  . . . . . . . . . . .	Text   	 outwordln
+OutWord  . . . . . . . . . . . .	Text   	 outword
+OutintLn . . . . . . . . . . . .	Text   	 outintln
+Outintln . . . . . . . . . . . .	Text   	 outintln
+Outint . . . . . . . . . . . . .	Text   	 outint
+OutstrLn . . . . . . . . . . . .	Text   	 outstrln
+OutwordLn  . . . . . . . . . . .	Text   	 outwordln
+Outword  . . . . . . . . . . . .	Text   	 outword
+PAGE_EXECUTE_READWRITE . . . . .	Number	 00000040h   
+PAGE_EXECUTE_READ  . . . . . . .	Number	 00000020h   
+PAGE_EXECUTE_WRITECOPY . . . . .	Number	 00000080h   
+PAGE_EXECUTE . . . . . . . . . .	Number	 00000010h   
+PAGE_NOACCESS  . . . . . . . . .	Number	 00000001h   
+PAGE_READONLY  . . . . . . . . .	Number	 00000002h   
+PAGE_READWRITE . . . . . . . . .	Number	 00000004h   
+PAGE_WRITECOPY . . . . . . . . .	Number	 00000008h   
+Pause  . . . . . . . . . . . . .	Text   	 pause
+ReadKey  . . . . . . . . . . . .	Text   	 readkey
+Red  . . . . . . . . . . . . . .	Number	 00000004h   
+STD_ERROR_HANDLE . . . . . . . .	Number	 -0000000Ch   
+STD_INPUT_HANDLE . . . . . . . .	Number	 -0000000Ah   
+STD_OUTPUT_HANDLE  . . . . . . .	Number	 -0000000Bh   
+SetConsoleTitle  . . . . . . . .	Text   	 SetConsoleTitleA
+Start  . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public STDCALL
+TRUNCATE_EXISTING  . . . . . . .	Number	 00000005h   
+URLDownloadToFile  . . . . . . .	Text   	 URLDownloadToFileA
+White  . . . . . . . . . . . . .	Number	 0000000Fh   
+Yellow . . . . . . . . . . . . .	Number	 0000000Eh   
+_imp__printf . . . . . . . . . .	DWord	 00000000 FLAT	External STDCALL
+_imp__sprintf  . . . . . . . . .	DWord	 00000000 FLAT	External STDCALL
+black  . . . . . . . . . . . . .	Number	 00000000h   
+blue . . . . . . . . . . . . . .	Number	 00000001h   
+bright . . . . . . . . . . . . .	Number	 00000008h   
+brown  . . . . . . . . . . . . .	Number	 00000006h   
+clrscr . . . . . . . . . . . . .	Text   	 ClrScr
+crt_printf . . . . . . . . . . .	Text   	 _imp__printf
+crt_sprintf  . . . . . . . . . .	Text   	 _imp__sprintf
+cyan . . . . . . . . . . . . . .	Number	 00000003h   
+darkgray . . . . . . . . . . . .	Number	 00000008h   
+dos  . . . . . . . . . . . . . .	Text   	 DOS
+downloadfile . . . . . . . . . .	Text   	 DownloadFile
+gotoxy . . . . . . . . . . . . .	Text   	 gotoXY
+green  . . . . . . . . . . . . .	Number	 00000002h   
+heapblocksize  . . . . . . . . .	Text   	 HeapBlockSize
+inint_proc@0 . . . . . . . . . .	L Near	 00000000 FLAT	External STDCALL
+inputstr . . . . . . . . . . . .	Text   	 InputStr
+k  . . . . . . . . . . . . . . .	Number	 00000003h   
+lightblue  . . . . . . . . . . .	Number	 00000009h   
+lightgray  . . . . . . . . . . .	Number	 00000007h   
+lightgreen . . . . . . . . . . .	Number	 0000000Ah   
+lightmagenta . . . . . . . . . .	Number	 0000000Dh   
+lightred . . . . . . . . . . . .	Number	 0000000Ch   
+magenta  . . . . . . . . . . . .	Number	 00000005h   
+nil  . . . . . . . . . . . . . .	DWord 	 00000000h   
+outintLn . . . . . . . . . . . .	Text   	 outintln
+outwordLn  . . . . . . . . . . .	Text   	 outwordln
+red  . . . . . . . . . . . . . .	Number	 00000004h   
+settextattr  . . . . . . . . . .	Text   	 SetTextAttr
+whereX . . . . . . . . . . . . .	Text   	 WhereX
+whereY . . . . . . . . . . . . .	Text   	 WhereY
+wherex . . . . . . . . . . . . .	Text   	 WhereX
+wherey . . . . . . . . . . . . .	Text   	 WhereY
+white  . . . . . . . . . . . . .	Number	 0000000Fh   
+yellow . . . . . . . . . . . . .	Number	 0000000Eh   
+
+	   0 Warnings
+	   0 Errors

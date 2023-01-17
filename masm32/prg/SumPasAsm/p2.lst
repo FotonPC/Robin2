@@ -1,0 +1,81 @@
+Microsoft (R) Macro Assembler Version 6.14.8444		    04/27/21 19:22:33
+p2.asm							     Page 1 - 1
+
+
+				.386
+				.model flat,stdcall
+				option casemap:none
+
+				Comment * модуль p2.asm
+				   Суммирование массива, контроль ошибок.
+				   В конечном end не нужна метка Start
+				*
+ 00000000			.code
+				   public Sum;         внешнее имя _Sum@0
+
+				   externdef  Error: byte; внешнее имя _Error
+				;   extrn  Error: byte; внешнее имя _Error
+ 00000000			Sum proc
+ 00000000  55			   push ebp
+ 00000001  8B EC		   mov  ebp,esp
+ 00000003  51			   push ecx
+ 00000004  53			   push ebx
+ 00000005  C6 05 00000000 E	   mov  Error,-1;     Error:=true  
+	   FF
+ 0000000C  8B 5D 08		   mov  ebx,[ebp+8];  адрес А[1]
+ 0000000F  8B 4D 0C		   mov  ecx,[ebp+12]; N
+ 00000012  33 C0		   xor  eax,eax;      Sum:=0
+ 00000014  03 03		L: add  eax,[ebx];    Sum:=Sum+A[i]
+ 00000016  70 0C		   jo   Voz;          при переполнении
+ 00000018  83 C3 04		   add  ebx,4;        i:=i+1
+ 0000001B  E2 F7		   loop L
+ 0000001D  C6 05 00000000 E	   mov  Error,0;      Error:=false
+	   00
+ 00000024			Voz:
+ 00000024  5B			   pop  ebx
+ 00000025  59			   pop  ecx
+ 00000026  5D			   pop  ebp
+ 00000027  C2 0008		   ret  8
+ 0000002A			Sum endp
+				   end
+Microsoft (R) Macro Assembler Version 6.14.8444		    04/27/21 19:22:33
+p2.asm							     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000000 DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 0000002A DWord	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+Sum  . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000002A Public STDCALL
+  L  . . . . . . . . . . . . . .	L Near	 00000014 _TEXT	
+  Voz  . . . . . . . . . . . . .	L Near	 00000024 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+Error  . . . . . . . . . . . . .	Byte	 00000000 FLAT	External STDCALL
+
+	   0 Warnings
+	   0 Errors
