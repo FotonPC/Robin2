@@ -1,3 +1,5 @@
+# TODO - Сделать сохранение настроек стиля
+
 import threading
 import tkinter.messagebox
 import tkinter as tk
