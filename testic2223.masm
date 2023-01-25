@@ -1,9 +1,0 @@
-include console.inc
-.data
-math_var_21 dq ?
-.code
-Start:
-outint DWORD PTR math_var_21
-newline
-exit
-end Start

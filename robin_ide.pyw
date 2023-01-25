@@ -1,4 +1,4 @@
-# TODO - Сделать сохранение настроек стиля
+
 
 import threading
 import tkinter.messagebox
@@ -37,17 +37,13 @@ def exc_log(func=None):
     def res(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except Exception as err:
-            w = tk.Tk()
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-            x = '\n'.join(lines)
-            tk.Label(w, text=f"""
-            {err}
-            {lines}
-            main exception
-            """).pack()
-            w.mainloop()
+        except Exception as error:
+            window = tk.Tk()
+            lines_s = '\n'.join(traceback.format_exception(*sys.exc_info()))
+            tk.Label(window, text=f"""{error}
+            {lines_s}
+            main exception""").pack()
+            window.mainloop()
 
     return res
 
@@ -55,18 +51,20 @@ def exc_log(func=None):
 class CodeStyleObj:
     @exc_log
     def __init__(self, bg="#333333", fg="#FFFFAA", font=('Source Code Pro', 13, 'bold'),
-                 lighting_theme=code_lighting_theme_dark):
+                 lighting_theme=None):
+        if lighting_theme is None:
+            lighting_theme = code_lighting_theme_dark
         self.bg = bg
         self.fg = fg
         self.font = font
         self.lighting = lighting_theme
 
     @exc_log
-    def tkget(self):
+    def tkinter_get(self):
         return {"bg": self.bg, "fg": self.fg, 'font': self.font}
 
     @exc_log
-    def tksettags(self, txt):
+    def tkinter_set_tags(self, txt):
         txt.code_lighting_theme = self.lighting
         txt.syntax_lighting_update()
 
@@ -210,30 +208,30 @@ class App:
         self.toolbar_tab2.pack(fill='both', expand=True)
         self.toolbar_notebook.add(self.toolbar_tab2, text=self.localisation["toolbarbuild"])
         self.toolbar_entry_build_file = ttk.Entry(self.toolbar_tab2, width=70)
-        self.toolbar_entry_build_file.grid(row=0, column=0)
+        self.toolbar_entry_build_file.grid(row=0, column=0, padx=3, pady=3)
         self.button_ask_build = ttk.Button(self.toolbar_tab2, text="Выбрать файл", command=self.set_build_file)
-        self.button_ask_build.grid(row=0, column=1)
+        self.button_ask_build.grid(row=0, column=1, pady=3, padx=3)
         self.button_build = ttk.Button(self.toolbar_tab2, text="Собрать", command=self.build_app)
-        self.button_build.grid(row=1, columnspan=2, column=0, sticky='we')
+        self.button_build.grid(row=1, columnspan=2, column=0, sticky='we', pady=3, padx=3)
         self.button_launch = ttk.Button(self.toolbar_tab2, text='Запустить', command=self.launch_app)
-        self.button_launch.grid(row=2, columnspan=2, column=0, sticky='we')
+        self.button_launch.grid(row=2, columnspan=2, column=0, sticky='we', pady=3, padx=3)
         self.toolbar_tab3 = ttk.Frame(self.toolbar_notebook)
         self.toolbar_tab3.pack(fill='both', expand=True)
-        ttk.Label(self.toolbar_tab3, text="Из:").grid(row=0, column=0)
+        ttk.Label(self.toolbar_tab3, text="Из:").grid(row=0, column=0, pady=5, padx=5)
         self.edit_entry_replace_from = ttk.Entry(self.toolbar_tab3)
         self.edit_entry_replace_from.grid(row=0, column=1)
-        ttk.Label(self.toolbar_tab3, text="В:").grid(row=1, column=0)
+        ttk.Label(self.toolbar_tab3, text="В:").grid(row=1, column=0, pady=5, padx=5)
         self.edit_entry_replace_to = ttk.Entry(self.toolbar_tab3)
-        self.edit_entry_replace_to.grid(row=1, column=1)
+        self.edit_entry_replace_to.grid(row=1, column=1, pady=5, padx=5)
         ttk.Button(self.toolbar_tab3, text="Заменить", command=self.toolbar_replace_command).grid(row=0, column=2,
                                                                                                   rowspan=2,
-                                                                                                  sticky="ns")
+                                                                                                  sticky="ns", pady=5, padx=5)
         ttk.Button(self.toolbar_tab3, text="Найти", command=self.search_in_file).grid(row=2, column=2, columnspan=1,
-                                                                                      sticky="we")
+                                                                                      sticky="we", pady=5, padx=5)
         ttk.Button(self.toolbar_tab3, text="Убрать теги Найти", command=self.search_in_file_del_tag).grid(row=2,
                                                                                                           column=0,
                                                                                                           columnspan=2,
-                                                                                                          sticky="we")
+                                                                                                          sticky="we", pady=5, padx=5)
         self.toolbar_notebook.add(self.toolbar_tab3, text=self.localisation["toolbaredit"])
         self.toolbar_tab4_theme_style = ttk.Frame(self.toolbar_notebook)
         self.toolbar_notebook.add(self.toolbar_tab4_theme_style, text="Темы & Стили")
@@ -243,24 +241,24 @@ class App:
         except:
             pass
         self.toolbar_tab4_combobox_theme = ttk.Combobox(self.toolbar_tab4_theme_style, values=themes)
-        self.toolbar_tab4_combobox_theme.grid(row=0, column=1)
+        self.toolbar_tab4_combobox_theme.grid(row=0, column=1, pady=5, padx=5)
         self.toolbar_tab4_combobox_theme.set(self.theme_begin)
         self.toolbar_tab4_combobox_theme.bind("<<ComboboxSelected>>", self.theme_use_combo_bind)
-        ttk.Label(self.toolbar_tab4_theme_style, text="Тема интерфейса:").grid(row=0, column=0)
+        ttk.Label(self.toolbar_tab4_theme_style, text="Тема интерфейса:").grid(row=0, column=0, pady=5, padx=5)
         self.toolbar_tab4_combobox_style = ttk.Combobox(self.toolbar_tab4_theme_style,
                                                         values=list(self.code_styles_themes.keys()))
-        self.toolbar_tab4_combobox_style.grid(row=1, column=1)
+        self.toolbar_tab4_combobox_style.grid(row=1, column=1, pady=5, padx=5)
         self.toolbar_tab4_combobox_style.set(self.codestyle_begin)
         self.toolbar_tab4_combobox_style.bind("<<ComboboxSelected>>", self.style_use_combo_bind)
         # self.toolbar_tab4_combobox_style.bind("<<ComboboxSelected>>", self.theme_use_combo_bind)
-        ttk.Label(self.toolbar_tab4_theme_style, text="Тема редактора:").grid(row=1, column=0)
+        ttk.Label(self.toolbar_tab4_theme_style, text="Тема редактора:").grid(row=1, column=0, pady=5, padx=5)
         self.toolbar_tab4_combobox_style_output = ttk.Combobox(self.toolbar_tab4_theme_style,
                                                                values=list(self.code_styles_themes.keys()))
-        self.toolbar_tab4_combobox_style_output.grid(row=2, column=1)
+        self.toolbar_tab4_combobox_style_output.grid(row=2, column=1, pady=5, padx=5)
         self.toolbar_tab4_combobox_style_output.set(self.codestyle_begin)
         self.toolbar_tab4_combobox_style_output.bind("<<ComboboxSelected>>", self.style_out_use_combo_bind)
         # self.toolbar_tab4_combobox_style.bind("<<ComboboxSelected>>", self.theme_use_combo_bind)
-        ttk.Label(self.toolbar_tab4_theme_style, text="Тема компилятора:").grid(row=2, column=0)
+        ttk.Label(self.toolbar_tab4_theme_style, text="Тема компилятора:").grid(row=2, column=0, pady=5, padx=5)
 
     @exc_log
     def init_filespace(self):
@@ -321,8 +319,8 @@ class App:
             self.files_space_notebook.select(int(self.files_space_notebook.index('end')) - 1)
             self.files_tab[-1].id = self.files_space_notebook.select()
             self.files_tab[-1].index = self.files_space_notebook.index(self.files_tab[-1].id)
-            self.files_tab[-1].text.config(**self.code_styles_themes[self.toolbar_tab4_combobox_style.get()].tkget())
-            self.code_styles_themes[self.toolbar_tab4_combobox_style.get()].tksettags(self.files_tab[-1])
+            self.files_tab[-1].text.config(**self.code_styles_themes[self.toolbar_tab4_combobox_style.get()].tkinter_get())
+            self.code_styles_themes[self.toolbar_tab4_combobox_style.get()].tkinter_set_tags(self.files_tab[-1])
             self.new_file_n += 1
 
     @exc_log
@@ -338,8 +336,8 @@ class App:
         self.files_tab[-1].index = self.files_space_notebook.index(self.files_tab[-1].id)
         self.files_tab[-1].filename = fn
         self.files_tab[-1].text_tab = f"#[{self.new_file_n}] " + fn.split('/')[-1]
-        self.files_tab[-1].text.config(**self.code_styles_themes[self.toolbar_tab4_combobox_style.get()].tkget())
-        self.code_styles_themes[self.toolbar_tab4_combobox_style.get()].tksettags(self.files_tab[-1])
+        self.files_tab[-1].text.config(**self.code_styles_themes[self.toolbar_tab4_combobox_style.get()].tkinter_get())
+        self.code_styles_themes[self.toolbar_tab4_combobox_style.get()].tkinter_set_tags(self.files_tab[-1])
 
         try:
             with open(fn, encoding='utf-8') as file:
@@ -470,13 +468,13 @@ class App:
     def style_use_combo_bind(self, event=None):
         st = self.code_styles_themes[self.toolbar_tab4_combobox_style.get()]
         for tab in self.files_tab:
-            tab.text.config(**st.tkget())
-            self.code_styles_themes[self.toolbar_tab4_combobox_style.get()].tksettags(tab)
+            tab.text.config(**st.tkinter_get())
+            self.code_styles_themes[self.toolbar_tab4_combobox_style.get()].tkinter_set_tags(tab)
 
     @exc_log
     def style_out_use_combo_bind(self, event=None):
         st = self.code_styles_themes[self.toolbar_tab4_combobox_style_output.get()]
-        self.output_tab1.text.config(**st.tkget())
+        self.output_tab1.text.config(**st.tkinter_get())
 
     @exc_log
     def search_in_file(self, event=None):

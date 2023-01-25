@@ -1,4 +1,4 @@
-include include/console.inc
+include console.inc
 .data
 user_var_10 dq ?
 user_var_20 dq ?
@@ -6,37 +6,37 @@ user_var_30 dq ?
 .code
 Start:
 inint ECX ; Компилятор: сохраняем значение в регистр. Кто не понял, тот бот. Это MASM Дитя
-mov DWORD PTR user_var_20, ECX ; Выгружаем значение из регистра куда надо
+mov DWORD PTR user_var_10, ECX ; Выгружаем значение из регистра куда надо
 inint ECX ; Компилятор: сохраняем значение в регистр. Кто не понял, тот бот. Это MASM Дитя
-mov DWORD PTR user_var_30, ECX ; Выгружаем значение из регистра куда надо
-mov EAX, DWORD PTR user_var_20; переносим значение первого выражения в регистр
-mov EBX, DWORD PTR user_var_30 ; переносим значение второго выражения в регистр
+mov DWORD PTR user_var_20, ECX ; Выгружаем значение из регистра куда надо
+mov EAX, DWORD PTR user_var_10; переносим значение первого выражения в регистр
+mov EBX, DWORD PTR user_var_20 ; переносим значение второго выражения в регистр
 add EAX, EBX ; складываем
 mov EAX, EAX ; переносим из регистра в ячейку памяти - результат
-mov DWORD PTR user_var_10, EAX
-outint DWORD PTR user_var_10
+mov DWORD PTR user_var_30, EAX
+outint DWORD PTR user_var_30
 newline
-mov EAX, DWORD PTR user_var_20; переносим значение первого выражения в регистр
-mov EBX, DWORD PTR user_var_30 ; переносим значение второго выражения в регистр
+mov EAX, DWORD PTR user_var_10; переносим значение первого выражения в регистр
+mov EBX, DWORD PTR user_var_20 ; переносим значение второго выражения в регистр
 imul EBX ; перемножаем - результат в EAX
 mov EAX, EAX ; переносим из регистра в ячейку памяти - результат
-mov DWORD PTR user_var_10, EAX
-outint DWORD PTR user_var_10
+mov DWORD PTR user_var_30, EAX
+outint DWORD PTR user_var_30
 newline
-mov EAX, DWORD PTR user_var_20; переносим значение первого выражения в регистр
-mov EBX, DWORD PTR user_var_30 ; переносим значение второго выражения в регистр
+mov EAX, DWORD PTR user_var_10; переносим значение первого выражения в регистр
+mov EBX, DWORD PTR user_var_20 ; переносим значение второго выражения в регистр
 sub EAX, EBX ; вычитаем 
 mov EAX, EAX ; переносим из регистра в ячейку памяти - результат
-mov DWORD PTR user_var_10, EAX
-outint DWORD PTR user_var_10
+mov DWORD PTR user_var_30, EAX
+outint DWORD PTR user_var_30
 newline
-mov EAX, DWORD PTR user_var_20; переносим значение первого выражения в регистр
-mov EBX, DWORD PTR user_var_30 ; переносим значение второго выражения в регистр
+mov EAX, DWORD PTR user_var_10; переносим значение первого выражения в регистр
+mov EBX, DWORD PTR user_var_20 ; переносим значение второго выражения в регистр
 mov EDX, 0; вы все боты
 idiv EBX ; делим - результат в EAX
 mov EAX, EAX ; переносим из регистра в ячейку памяти - результат
-mov DWORD PTR user_var_10, EAX
-outint DWORD PTR user_var_10
+mov DWORD PTR user_var_30, EAX
+outint DWORD PTR user_var_30
 newline
 exit
 end Start
