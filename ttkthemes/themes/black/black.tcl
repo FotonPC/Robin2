@@ -46,6 +46,8 @@ namespace eval ttk::theme::black {
   } else {
     set styleCmd style
   }
+  font create myDefaultFont -family "Jetbrains Mono" -size 15
+    option add *font myDefaultFont
 
   $styleCmd theme create black -parent clam -settings {
 
@@ -62,7 +64,7 @@ namespace eval ttk::theme::black {
         -selectbackground $colors(-selectbg) \
         -selectforeground $colors(-selectfg) \
         -selectborderwidth 0 \
-        -font TkDefaultFont \
+        -font myDefaultFont \
         -relief flat\
         ;
 
@@ -88,8 +90,9 @@ namespace eval ttk::theme::black {
         -fieldbackground white -foreground black \
         -padding {2 0} -relief flat -disabledbackground $colors(-lighter)
     $styleCmd configure TCombobox \
-        -fieldbackground white -foreground black \
-        -padding {2 0} -relief flat
+        -fieldbackground $colors(-yellowdark) -foreground black \
+        -padding {2 0} -relief flat -arrowcolor "#aa8800" -bordercolor $colors(-dark) -foreground "#ffeeaa" -darkcolor $colors(-dark) -focusfill $colors(-dark) -arrowsize 20 -arrowstyle flat7x4
+
 
     $styleCmd configure TNotebook.Tab \
         -padding {6 2 6 2} -relief flat -bordercolor $colors(-yellowdark) -foreground "#cceeff"
@@ -146,7 +149,7 @@ namespace eval ::tablelist:: {
       -labelborderwidth	2 \
       -labelpady	1 \
       -arrowcolor	"" \
-      -arrowstyle	sunken10x9 \
+      -arrowstyle	flat 7x4 \
       ]
   }
 }

@@ -1,5 +1,4 @@
-
-
+import json
 import threading
 import tkinter.messagebox
 import tkinter as tk
@@ -10,6 +9,13 @@ import make_exe
 import os, sys
 import parse, imp_lexer, ro_asm_compiler
 import re
+
+template_settings = {
+  "interface_theme" : "black",
+  "editor_theme" : "dark std",
+  "compiler_theme" : "dark std",
+  "editor_font" : ("Jetbrains Mono", 15)
+}
 
 code_lighting_theme_dark = {"RESERVED": {"foreground": "#ff0000"},
                             "ASM_CODE": {"foreground": "#00ff00"},
@@ -32,6 +38,8 @@ code_lighting_theme_light = {"RESERVED": {"foreground": "#aa0000"},
                              "KEYWORD2": {"foreground": '#8888aa'}
                              }
 
+settings_json_path = "settings.json"
+
 
 def exc_log(func=None):
     def res(*args, **kwargs):
@@ -50,7 +58,7 @@ def exc_log(func=None):
 
 class CodeStyleObj:
     @exc_log
-    def __init__(self, bg="#333333", fg="#FFFFAA", font=('Source Code Pro', 13, 'bold'),
+    def __init__(self, bg="#333333", fg="#FFFFAA", font=('Jetbrains Mono', 18, 'bold'),
                  lighting_theme=None):
         if lighting_theme is None:
             lighting_theme = code_lighting_theme_dark
@@ -75,7 +83,7 @@ class FileField(ttk.Frame):
         super().__init__(master)
         self.lighting = lighting
         self.master = master
-        self.text = tk.Text(self, bg='#333333', fg='#FFFFAA', font=('Source Code Pro', 13, 'bold'))
+        self.text = tk.Text(self, bg='#333333', fg='#FFFFAA', font=('Jetbrains Mono', 16))
         self.text.pack(expand=True, fill='both', side='left')
         scroll = ttk.Scrollbar(self, command=self.text.yview)
         scroll.pack(side=tk.LEFT, fill=tk.Y)
@@ -146,7 +154,7 @@ class FileField(ttk.Frame):
 
 class App:
     @exc_log
-    def __init__(self, theme, title="tk"):
+    def __init__(self, app_settings, title="tk"):
         self.button_open = None
         self.button_save = None
         self.button_saveas = None
@@ -172,12 +180,13 @@ class App:
         self.toolbar_notebook = None
         self.toolbar_tab1 = None
         self.toolbar_tab2 = None
-        self.main_window = ttkthemes.ThemedTk(theme)
+        self.settings = app_settings
+        self.main_window = ttkthemes.ThemedTk(app_settings["interface_theme"])
         self.main_window.title(title)
         self.style = ttkthemes.ThemedStyle()
-        self.style.theme_use(theme)
-        self.theme_begin = theme
-        self.codestyle_begin = "dark std"
+        self.style.theme_use(app_settings["interface_theme"])
+        self.theme_begin = app_settings["interface_theme"]
+        self.codestyle_begin = app_settings["editor_theme"]
         print(self.style.theme_names())
         self.window = ttk.Frame(self.main_window)
         self.window.pack(expand=True, fill="both")
@@ -188,12 +197,13 @@ class App:
         self.main_window.bind("<Control-s>", self.file_save)
         self.main_window.mainloop()
 
+
     @exc_log
     def init_toolbar(self):
         self.toolbar_frame = ttk.Frame(self.window)
-        self.toolbar_frame.place(relwidth=1, relheight=0.2, relx=0, rely=0)
+        self.toolbar_frame.pack(fill='x')
         self.toolbar_notebook = ttk.Notebook(self.toolbar_frame)
-        self.toolbar_notebook.pack(expand=True, fill='both')
+        self.toolbar_notebook.pack(fill='x', side='left', expand=True)
         self.toolbar_notebook.enable_traversal()
         self.toolbar_tab1 = ttk.Frame(self.toolbar_notebook)
         self.toolbar_tab1.pack(fill='both', expand=True)
@@ -207,14 +217,14 @@ class App:
         self.toolbar_tab2 = ttk.Frame(self.toolbar_notebook)
         self.toolbar_tab2.pack(fill='both', expand=True)
         self.toolbar_notebook.add(self.toolbar_tab2, text=self.localisation["toolbarbuild"])
-        self.toolbar_entry_build_file = ttk.Entry(self.toolbar_tab2, width=70)
-        self.toolbar_entry_build_file.grid(row=0, column=0, padx=3, pady=3)
+        self.toolbar_entry_build_file = ttk.Entry(self.toolbar_tab2)
+        self.toolbar_entry_build_file.place(relx=0, rely=0, relwidth=0.8)
         self.button_ask_build = ttk.Button(self.toolbar_tab2, text="Выбрать файл", command=self.set_build_file)
-        self.button_ask_build.grid(row=0, column=1, pady=3, padx=3)
+        self.button_ask_build.place(relx=1, rely=0, anchor="ne")
         self.button_build = ttk.Button(self.toolbar_tab2, text="Собрать", command=self.build_app)
-        self.button_build.grid(row=1, columnspan=2, column=0, sticky='we', pady=3, padx=3)
+        self.button_build.place(x = 0, y = 50)
         self.button_launch = ttk.Button(self.toolbar_tab2, text='Запустить', command=self.launch_app)
-        self.button_launch.grid(row=2, columnspan=2, column=0, sticky='we', pady=3, padx=3)
+        self.button_launch.place(x =120, y = 50)
         self.toolbar_tab3 = ttk.Frame(self.toolbar_notebook)
         self.toolbar_tab3.pack(fill='both', expand=True)
         ttk.Label(self.toolbar_tab3, text="Из:").grid(row=0, column=0, pady=5, padx=5)
@@ -248,14 +258,14 @@ class App:
         self.toolbar_tab4_combobox_style = ttk.Combobox(self.toolbar_tab4_theme_style,
                                                         values=list(self.code_styles_themes.keys()))
         self.toolbar_tab4_combobox_style.grid(row=1, column=1, pady=5, padx=5)
-        self.toolbar_tab4_combobox_style.set(self.codestyle_begin)
+        self.toolbar_tab4_combobox_style.set(self.settings["editor_theme"])
         self.toolbar_tab4_combobox_style.bind("<<ComboboxSelected>>", self.style_use_combo_bind)
         # self.toolbar_tab4_combobox_style.bind("<<ComboboxSelected>>", self.theme_use_combo_bind)
         ttk.Label(self.toolbar_tab4_theme_style, text="Тема редактора:").grid(row=1, column=0, pady=5, padx=5)
         self.toolbar_tab4_combobox_style_output = ttk.Combobox(self.toolbar_tab4_theme_style,
                                                                values=list(self.code_styles_themes.keys()))
         self.toolbar_tab4_combobox_style_output.grid(row=2, column=1, pady=5, padx=5)
-        self.toolbar_tab4_combobox_style_output.set(self.codestyle_begin)
+        self.toolbar_tab4_combobox_style_output.set(self.settings["compiler_theme"])
         self.toolbar_tab4_combobox_style_output.bind("<<ComboboxSelected>>", self.style_out_use_combo_bind)
         # self.toolbar_tab4_combobox_style.bind("<<ComboboxSelected>>", self.theme_use_combo_bind)
         ttk.Label(self.toolbar_tab4_theme_style, text="Тема компилятора:").grid(row=2, column=0, pady=5, padx=5)
@@ -264,7 +274,7 @@ class App:
     def init_filespace(self):
         self.new_file_n = 0
         self.files_space_frame = ttk.Frame(self.window)
-        self.files_space_frame.place(relwidth=1, relheight=0.5, relx=0, rely=0.2)
+        self.files_space_frame.pack(fill='both', expand=True)
         self.files_space_notebook = ttk.Notebook(self.files_space_frame)
         self.files_space_notebook.enable_traversal()
         self.files_space_notebook.pack(expand=True, fill='both')
@@ -287,12 +297,15 @@ class App:
     @exc_log
     def init_output(self):
         self.output_frame = ttk.Frame(self.window)
-        self.output_frame.place(relwidth=1, relheight=0.3, relx=0, rely=0.7)
+        self.output_frame.pack(fill='x')
         self.output_notebook = ttk.Notebook(self.output_frame)
         self.output_notebook.enable_traversal()
         self.output_notebook.pack(expand=True, fill='both')
-        self.output_tab1 = FileField(self.output_notebook, lighting=False)
+        self.output_tab1 = FileField(self.output_notebook, lighting=False )
         self.output_tab1.text.config(state='disabled')
+        self.output_tab1.text.config(height=10)
+        self.code_styles_themes[self.settings["compiler_theme"]].tkinter_set_tags(self.output_tab1)
+        self.output_tab1.text.config(self.code_styles_themes[self.settings["compiler_theme"]].tkinter_get())
         self.output_tab1.pack(fill='both', expand=True)
         self.output_notebook.add(self.output_tab1, text="Вывод компилятора")
 
@@ -470,11 +483,13 @@ class App:
         for tab in self.files_tab:
             tab.text.config(**st.tkinter_get())
             self.code_styles_themes[self.toolbar_tab4_combobox_style.get()].tkinter_set_tags(tab)
+        self.settings["editor_theme"] = self.toolbar_tab4_combobox_style.get()
 
     @exc_log
     def style_out_use_combo_bind(self, event=None):
         st = self.code_styles_themes[self.toolbar_tab4_combobox_style_output.get()]
         self.output_tab1.text.config(**st.tkinter_get())
+        self.settings["compiler_theme"] = self.toolbar_tab4_combobox_style_output.get()
 
     @exc_log
     def search_in_file(self, event=None):
@@ -507,7 +522,13 @@ class App:
 
 if __name__ == "__main__":
     try:
-        App("black", title="Robin 2 IDE")
+        try:
+            with open(settings_json_path) as settings_file:
+                settings = json.load(settings_file)
+        except Exception as error:
+            settings = template_settings
+            print(error)
+        App(settings, title="Robin 2 IDE")
     except Exception as err:
         w = tk.Tk()
         exc_type, exc_value, exc_traceback = sys.exc_info()

@@ -1,20 +1,20 @@
-include include\console.inc
+include console.inc
 .data
-user_var_40 dq ?
+user_var_10 dq ?
 user_var_20 dq ?
 user_var_30 dq ?
-user_var_10 dq ?
+user_var_40 dq ?
 .code
 Start:
-mov DWORD PTR user_var_20, 1
+mov DWORD PTR user_var_10, 1
 mov DWORD PTR user_var_40, 1
-outint DWORD PTR user_var_20
+outint DWORD PTR user_var_10
 newline
 outint DWORD PTR user_var_40
 newline
-mov DWORD PTR user_var_30, 0
+mov DWORD PTR user_var_20, 0
 while_labelbool_var_42:
-mov EAX, DWORD PTR user_var_30
+mov EAX, DWORD PTR user_var_20
 mov EBX, 10
 cmp EAX, EBX
 jnl next_bool_var_22
@@ -26,24 +26,24 @@ next_bool_var_32:
 mov EAX, ECX
 cmp EAX, 1
 jne while_nextbool_var_42
-mov EAX, DWORD PTR user_var_20; переносим значение первого выражения в регистр
+mov EAX, DWORD PTR user_var_10; переносим значение первого выражения в регистр
 mov EBX, DWORD PTR user_var_40 ; переносим значение второго выражения в регистр
 add EAX, EBX ; складываем
 mov EAX, EAX ; переносим из регистра в ячейку памяти - результат
-mov DWORD PTR user_var_10, EAX
-outint DWORD PTR user_var_10
+mov DWORD PTR user_var_30, EAX
+outint DWORD PTR user_var_30
 newline
 mov EDX, DWORD PTR user_var_40 ;Извлекаем в регистр для меньшего количества багов
 mov EAX, EDX ;Дада, запихиваем зачем-то снова
-mov DWORD PTR user_var_20, EAX
-mov EDX, DWORD PTR user_var_10 ;Извлекаем в регистр для меньшего количества багов
+mov DWORD PTR user_var_10, EAX
+mov EDX, DWORD PTR user_var_30 ;Извлекаем в регистр для меньшего количества багов
 mov EAX, EDX ;Дада, запихиваем зачем-то снова
 mov DWORD PTR user_var_40, EAX
-mov EAX, DWORD PTR user_var_30; переносим значение первого выражения в регистр
+mov EAX, DWORD PTR user_var_20; переносим значение первого выражения в регистр
 mov EBX, 1 ; переносим значение второго выражения в регистр
 add EAX, EBX ; складываем
 mov EAX, EAX ; переносим из регистра в ячейку памяти - результат
-mov DWORD PTR user_var_30, EAX
+mov DWORD PTR user_var_20, EAX
 jmp while_labelbool_var_42
 while_nextbool_var_42:
 exit
