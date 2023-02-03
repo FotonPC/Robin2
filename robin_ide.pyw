@@ -11,7 +11,7 @@ import parse, imp_lexer, ro_asm_compiler
 import re
 
 template_settings = {
-  "interface_theme" : "black",
+  "interface_theme" : "yaru",
   "editor_theme" : "dark std",
   "compiler_theme" : "dark std",
   "editor_font" : ("Jetbrains Mono", 15)
@@ -83,7 +83,7 @@ class FileField(ttk.Frame):
         super().__init__(master)
         self.lighting = lighting
         self.master = master
-        self.text = tk.Text(self, bg='#333333', fg='#FFFFAA', font=('Jetbrains Mono', 16))
+        self.text = tk.Text(self, bg='#333333', fg='#FFFFAA', font=('Jetbrains Mono', 16), height=1)
         self.text.pack(expand=True, fill='both', side='left')
         scroll = ttk.Scrollbar(self, command=self.text.yview)
         scroll.pack(side=tk.LEFT, fill=tk.Y)

@@ -15,6 +15,7 @@ array set base_themes {
   kroc 0.0.1
   plastik 0.6.2
   radiance 0.1
+  red 0.1
   smog 0.1.1
   winxpblue 0.6
 }

@@ -21,6 +21,7 @@ THEMES = [
     "kroc",
     "plastik",
     "radiance",
+    "red",
     "scidblue",
     "scidgreen",
     "scidgrey",

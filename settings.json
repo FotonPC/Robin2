@@ -1,5 +1,5 @@
 {
-  "interface_theme" : "black",
+  "interface_theme" : "red",
   "editor_theme" : "dark std",
   "compiler_theme" : "dark std",
   "editor_font" : ["Jetbrains Mono", 15]
