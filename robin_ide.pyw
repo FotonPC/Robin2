@@ -46,13 +46,19 @@ def exc_log(func=None):
         try:
             return func(*args, **kwargs)
         except Exception as error:
-            window = tk.Tk()
-            lines_s = '\n'.join(traceback.format_exception(*sys.exc_info()))
-            tk.Label(window, text=f"""{error}
-            {lines_s}
-            main exception""").pack()
-            window.mainloop()
-
+            w = tk.Tk()
+            w.title("Отправь в Telegram @FotonPC")
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+            x = '\n'.join(lines)
+            tf = FileField(w, lighting=False)
+            tf.insert_text(f"""
+                    {error}
+                    {lines}
+                    main exception
+                    """)
+            tf.pack(fill='both', expand=True)
+            w.mainloop()
     return res
 
 
@@ -534,9 +540,11 @@ if __name__ == "__main__":
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
         x = '\n'.join(lines)
-        tk.Label(w, text=f"""
+        tf = FileField(w, lighting=False)
+        tf.insert_text(f"""
         {err}
         {lines}
         main exception
-        """).pack()
+        """)
+        tf.pack(fill='both', expand=True)
         w.mainloop()

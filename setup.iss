@@ -2,16 +2,16 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Robin2"
-#define MyAppVersion "2.2"
+#define MyAppVersion "2.3"
 #define MyAppPublisher "FotonPC, Inc."
-#define MyAppURL "http:/ppbe.ru/"
+#define MyAppURL "http://ppbe.ru/"
 #define MyAppExeName "robin_ide.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{CB2A8BAE-4A29-4BE5-AC32-1D13578EC9E9}
+AppId={{270116FE-F9C8-41B7-8D02-DBCD5D45B874}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
@@ -19,11 +19,13 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={pf}\Robin2_2
+DefaultDirName={pf}\Robin2_3
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-LicenseFile=C:\Users\foton\PycharmProjects\Robin2\Лицензия.md
-OutputBaseFilename=setup_robin2_2
+LicenseFile=C:\Users\foton\PycharmProjects\robin_to_install\Лицензия.md
+InfoBeforeFile=C:\Users\foton\PycharmProjects\robin_to_install\after_install.txt
+InfoAfterFile=C:\Users\foton\PycharmProjects\robin_to_install\ai.txt
+OutputBaseFilename=robin2_3_setup
 SetupIconFile=C:\Users\foton\PycharmProjects\Robin2\images\robin_logo_256x256.ico
 Compression=lzma
 SolidCompression=yes
@@ -41,8 +43,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Files]
-Source: "C:\Users\foton\PycharmProjects\Robin2\robin_ide.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\foton\PycharmProjects\Robin2\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\foton\PycharmProjects\robin_to_install\robin_ide.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\foton\PycharmProjects\robin_to_install\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
