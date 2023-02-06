@@ -2,16 +2,16 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Robin2"
-#define MyAppVersion "2.3"
+#define MyAppVersion "2.4"
 #define MyAppPublisher "FotonPC, Inc."
-#define MyAppURL "http://ppbe.ru/"
+#define MyAppURL "http://www.ppbe.ru/"
 #define MyAppExeName "robin_ide.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{270116FE-F9C8-41B7-8D02-DBCD5D45B874}
+AppId={{625C867F-DB67-4549-ABC6-269056CF1CC2}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
@@ -19,13 +19,13 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={pf}\Robin2_3
+DefaultDirName={pf}\Robin_v2.4
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 LicenseFile=C:\Users\foton\PycharmProjects\robin_to_install\Лицензия.md
-InfoBeforeFile=C:\Users\foton\PycharmProjects\robin_to_install\after_install.txt
-InfoAfterFile=C:\Users\foton\PycharmProjects\robin_to_install\ai.txt
-OutputBaseFilename=robin2_3_setup
+InfoBeforeFile=C:\Users\foton\PycharmProjects\robin_to_install\before.txt
+InfoAfterFile=C:\Users\foton\PycharmProjects\robin_to_install\after.txt
+OutputBaseFilename=robin_installer
 SetupIconFile=C:\Users\foton\PycharmProjects\Robin2\images\robin_logo_256x256.ico
 Compression=lzma
 SolidCompression=yes
@@ -49,6 +49,7 @@ Source: "C:\Users\foton\PycharmProjects\robin_to_install\*"; DestDir: "{app}"; F
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
